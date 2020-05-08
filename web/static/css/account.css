@@ -1,0 +1,23 @@
+.account {
+    width: 400px;
+    margin-top: 5px;
+    margin-left: auto;
+    margin-right: 1px;
+    border: 1px solid #f0f0f0;
+    padding: 10px 30px 30px 30px;
+    -webkit-box-shadow: 5px 10px 10px rgba(0, 0, 0, .05);
+    box-shadow: 5px 10px 10px rgba(0, 0, 0, .05);
+    background-color: #a6e1ec;
+    opacity: 0.8;
+
+}
+
+.account .title {
+    font-size: 25px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.account .form-group {
+    margin-bottom: 20px;
+}
