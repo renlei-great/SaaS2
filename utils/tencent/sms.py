@@ -22,6 +22,7 @@ def send_sms_single(tpl, mobile_phone):
         sms_sign = "SaaSRenLei"
         # 验证码
         code = "".join(random.sample(string.digits, 4))
+        # code = "1314"
         # 模板参数
         if tpl == 'login':
             params = [code, 4]

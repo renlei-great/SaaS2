@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'user'  # 注册用户模块
+    'web'  # 注册正式写项目的app
 ]
 
 MIDDLEWARE = [
@@ -136,6 +137,10 @@ CACHES = {
         "LOCATION": "redis://127.0.0.1:6379/2",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "max_connections": 100,
+                "encoding": 'utf-8',
+            }
         }
     }
 }

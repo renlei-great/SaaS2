@@ -6,16 +6,22 @@ from utils.tencent.sms import send_sms_single
 
 # Create your views here.
 def send_sms(request):
+    """发送验证码"""
     tpl = request.POST.get('tpl')
     mobile = request.POST.get('mobile')
+
+    qy = UserInfo.objects.filter(mobile_phpne=mobile)
+    if qy:
+        return JsonResponse({'filed': 'mobile_phpne', 'result': '2', 'errmsg': '该手机号已注册'})
 
     try:
         mobile = int(mobile)
         res = send_sms_single(tpl, mobile)
-
+        res['errmsg'] = '发送成功'
+        res['filed'] = 'code'
         return JsonResponse(res)
     except:
-        return JsonResponse({'errmsg': '发送失败'})
+        return JsonResponse({'filed': 'mobile_phpne', 'result': '2', 'errmsg': '发送失败'})
 
 
 from django import forms
@@ -65,42 +71,40 @@ def register(request):
         eh = request.POST.get('hh')
         print(eh, 'sss')
         form = RegisterForm()
-        return render(request, 'register.html', {'form':form})
+        return render(request, 'user/register.html', {'form':form})
 
     if request.method == 'POST':
         form = RegisterForm(request.POST)
 
-        # if not form.is_valid():
-        #     return HttpResponse('注册失败')
-
-        # 写业务逻辑
-        print(form.data)
-
+        # 获取数据
         username = form.data['username']
         email = form.data['email']
         password = form.data['password']
         password1 = form.data['password1']
         mobile = form.data['mobile_phpne']
         code = form.data['code']
+
+        # 向redis数据库中取出验证码
         from django_redis import get_redis_connection
         conn = get_redis_connection('default')
         redis_code = conn.get(mobile)
 
-        if code != redis_code.decode():
-            return HttpResponse('验证码错误')
+        # 校验数据
+        try:
+            if code != redis_code.decode():
+                return JsonResponse({'filed': 'code', 'errmsg': '验证码错误'})
+        except AttributeError:
+            return JsonResponse({'filed': 'code', 'errmsg': '请先获取验证码'})
 
         if password != password1:
-            return HttpResponse('两次密码不一致')
-
-        qy = UserInfo.objects.filter(mobile_phpne=mobile)
-        if qy:
-            return HttpResponse('该手机号已注册')
+            return JsonResponse({'filed': 'password1', 'errmsg': '两次密码不一致'})
 
 
+
+        # 向mysql数据库添加数据
         user = UserInfo(username=username, email=email, password=password, mobile_phpne=mobile)
         user.save()
         return HttpResponse('注册成功')
-
 
 
 def login(request):
