@@ -10,6 +10,11 @@
             width: 400px;
             margin: 0 auto;
         }
+        .errmsg {
+        color: red;
+        position: absolute;
+        margin-top: 0px;
+        }
     </style>
 </head>
 <body>
@@ -20,22 +25,26 @@
             {% ifequal field.name 'code' %}
                 <div class="form-group">
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label> :
+
                     <div class="clearfix">
-                        <div class="col-md-6" style="padding-left: 0">{{ field }}</div>
+
+                        <div class="col-md-6" style="padding-left: 0">
+                            {{ field }}
+                        <div class="errmsg" id="{{ field.name }}_errmsg" style="{display: none;color: red;}"></div></div>
                         <div class="col-md-6">
                             <input type="button" id="button_code" class="btn btn-default" value="点击获取验证码">
+
                         </div>
                     </div>
                 </div>
-                <div class="errmsg" id="{{ field.name }}_errmsg" style="{display: none;color: red;}"></div>
             {% else %}
                 <div class="form-group">
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label> : {{ field }}
+                    <div class="errmsg" id="{{ field.name }}_errmsg" style="{display: none;color: red;}"></div>
                 </div>
-                <div class="errmsg" id="{{ field.name }}_errmsg" style="{display: none;color: red;}"></div>
             {% endifequal %}
         {% endfor %}
-        <button type="submit" class="btn btn-primary">注册</button>
+        <button id="register" style="margin-top: 5px" type="submit" class="btn btn-primary">注册</button>
     </form>
 </div>
 </body>
@@ -56,8 +65,7 @@
     function bindClickBtncode() {
         $('#button_code').on('click', function () {
             // 获取手机号
-            varmobile = $('#mobile_phpne_errmsg').prev().children('input').val()
-
+            varmobile = $('#id_mobile_phpne').val()
             if (varmobile != "") {
                 var that = $(this)
                 $.post('/user/send', {'mobile': varmobile, 'tpl': 'register'}, function (data) {
@@ -97,12 +105,18 @@
     $('.btn-primary').on('click', function (event) {
         event.preventDefault();
         var data = $('form').serializeArray();
-        $.post('/user/register', data, function (res) {
+        $.post('/user/register', data, function (data) {
             // 返回结果
-            var filed = '#' + res.filed + '_errmsg'
-            $('.errmsg').css('display', 'none')
-            $(filed).css('display', 'block').html(res.errmsg).css('color', 'red')
+            if (data.status) {
+                $('#register').html('注册成功')
+                $('#register').val('注册成功')
+                $('#register').text('注册成功')
+            } else {
+                $.each(data.error, function (key, val) {
+                        $('#' + key + '_errmsg').show().text(val[0])
+                    }
+                )
+            }
         })
     })
-
 </script>
