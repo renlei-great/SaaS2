@@ -55,10 +55,15 @@ class RegisterForm(forms.ModelForm):
 
 class SendSmSFoem(forms.Form):
     """发送短信表单"""
-    mobile_phpne = forms.CharField(label="手机",min_length=11, max_length=11, required=True, validators=[RegexValidator(r'^1[3|4|5|6|7|8|9]\d[9]', '手机格式错误'),])
+    mobile_phpne = forms.CharField(label="手机", min_length=11, max_length=11, validators=[RegexValidator(r'^1([3|4|5|6|7|8|9])\d{9}$', '手机格式错误')])
+
+    def __init__(self, request,  *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
 
     def clean_mobile_phpne(self):
-        mobile_phpne = self.changed_data['mobile_phpne']
+
+        mobile_phpne = self.cleaned_data['mobile_phpne']
 
         # 查看手机号是否被注册
         qy = UserInfo.objects.filter(mobile_phpne=mobile_phpne)
@@ -77,7 +82,5 @@ class SendSmSFoem(forms.Form):
 
         return mobile_phpne
 
-    def __init__(self,request,  *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.request = request
+
 

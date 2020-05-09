@@ -7,7 +7,7 @@ from web.models import UserInfo
 
 
 def register(request):
-    form = RegisterForm(request)
+    form = RegisterForm()
     form.is_valid()
     return render(request, 'register.html', {'form':form})
 
@@ -17,4 +17,4 @@ def send_sms(request):
     form = SendSmSFoem(request, data=request.GET)
     if form.is_valid():
         return JsonResponse({'status': True})
-    return JsonResponse({'status': True, 'error': form.errors})
+    return JsonResponse({'status': False, 'error': form.errors})
