@@ -84,6 +84,9 @@ def register(request):
         mobile = form.data['mobile_phpne']
         code = form.data['code']
 
+        # 校验数据是否有空值
+        if not all([username, email, password, password1, mobile, code]):
+            return JsonResponse({'filed': 'code', 'errmsg': '请填写完整'})
         # 向redis数据库中取出验证码
         from django_redis import get_redis_connection
         conn = get_redis_connection('default')
@@ -104,6 +107,7 @@ def register(request):
         # 向mysql数据库添加数据
         user = UserInfo(username=username, email=email, password=password, mobile_phpne=mobile)
         user.save()
+        conn.delete(mobile)
         return HttpResponse('注册成功')
 
 
