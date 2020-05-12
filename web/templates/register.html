@@ -7,115 +7,114 @@
     <link rel="stylesheet" href="{% static 'css/account.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <style>
-    .errmsg {
-        color: red;
-        position: absolute;
-        margin-top: 1px;
-    }
+        .errmsg {
+            color: red;
+            position: absolute;
+            margin-top: 1px;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
     <div style="z-index: 1000;position: fixed" class="container">
         <div class="account">
-        <div class="title"><h1>用户注册</h1></div>
-        <form novalidate>
-        {% csrf_token %}
-            {% for field in form %}
-                {% ifequal field.name 'code' %}
-                    <div class="form-group">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label> :
-                        <div class="clearfix">
-                            <div class="col-md-6" style="padding-left: 0">{{ field }}</div>
-                            <div class="col-md-6">
-                                <input type="button" id="button_code" class="btn btn-default" value="点击获取验证码">
-                                <div class="errmsg" id="{{ field.name }}_errmsg" style="{display: none;color: red;}"></div>
+            <div class="title"><h1>用户注册</h1></div>
+            <form>
+                {% csrf_token %}
+                {% for field in form %}
+                    {% ifequal field.name 'code' %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label> :
+                            <div class="clearfix">
+                                <div class="col-md-6" style="padding-left: 0">
+                                    {{ field }}
+                                    <div class="errmsg" id="{{ field.name }}_errmsg"
+                                         style="{display: none;color: red;}"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="button" id="button_code" class="btn btn-default" value="点击获取验证码">
+
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                {% else %}
-                    <div class="form-group">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label> : {{ field }}
-                        <div class="errmsg" id="{{ field.name }}_errmsg" style="{display: none;color: red;}" ></div>
-                    </div>
-
-                {% endifequal %}
-             {% endfor %}
-            <button type="submit" class="btn btn-primary">注册</button>
-        </form>
-    </div>
+                    {% else %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label> : {{ field }}
+                            <div class="errmsg" id="{{ field.name }}_errmsg" style="{display: none;color: red;}"></div>
+                        </div>
+                    {% endifequal %}
+                {% endfor %}
+                <button id="register" style="margin-top: 5px" type="button" class="btn btn-primary">注册</button>
+            </form>
+        </div>
     </div>
     <canvas id="canvas"></canvas>
 {% endblock %}
 
 {% block js %}
     <script src='{% static 'js/script.js' %}'></script>
-    <script  src="{% static 'js/TweenMax.min.js' %}"></script>
+    <script src="{% static 'js/TweenMax.min.js' %}"></script>
     <script type="text/javascript">
-    // 页面加载完进行调用
-    $(function () {
-        //获取验证码
-        bindClickBtncode()
+        // 页面加载完进行调用
+        $(function () {
+            //获取验证码
+            bindClickBtncode()
 
-    })
+        })
 
-    // 绑定全部input框
-    $('input').on('focus', function () {
-        $('.errmsg').css('display', 'none')
-    })
+        // 绑定全部input框
+        $('input').on('focus', function () {
+            $('.errmsg').css('display', 'none')
+        })
 
-    // 获取验证码
-    function bindClickBtncode() {
-        $('#button_code').on('click', function () {
-            $('.errmsg').empty()  // 将内容变为空
-            // 获取手机号
-            varmobile = $('#id_mobile_phpne').val()
-            var that = $(this)
-            $.ajax({
-                url: "{% url 'web:send_sms' %}",
-                type: "GET",
-                data:{'mobile_phpne': varmobile, 'tpl': 'register'},
-                dataType: "JSON", // 将返回的数据进行josn序列化
-                success: function (data) {
-                    if (data.status) {
-                        var timeo = 60;
-                        var timeStop = setInterval(function () {
-                            timeo--;
-                            if (timeo > 0) {
-                                that.val('发送成功' + timeo + 's');
-                                that.attr('disabled', 'disabled');//禁止点击
-                            } else {
-                                timeo = 60;//当减到0时赋值为60
-                                that.val('点击获取验证码');
-                                clearInterval(timeStop);//清除定时器
-                                that.removeAttr('disabled');//移除属性，可点击
-                            }
-                        }, 1000)
-                    }
-                    else {
-                        $.each(data.error, function (key, val) {
-                            $('#'+ key + '_errmsg').show().text(val[0])
-                        })
+        // 获取验证码
+        function bindClickBtncode() {
+            $('#button_code').on('click', function () {
+                $('.errmsg').empty()  // 将内容变为空
+                // 获取手机号
+                varmobile = $('#id_mobile_phpne').val()
+                var that = $(this)
+                $.ajax({
+                    url: "{% url 'web:send_sms' %}",
+                    type: "GET",
+                    data: {'mobile_phpne': varmobile, 'tpl': 'register'},
+                    dataType: "JSON", // 将返回的数据进行josn序列化
+                    success: function (data) {
+                        if (data.status) {
+                            var timeo = 60;
+                            var timeStop = setInterval(function () {
+                                timeo--;
+                                if (timeo > 0) {
+                                    that.val('发送成功' + timeo + 's');
+                                    that.attr('disabled', 'disabled');//禁止点击
+                                } else {
+                                    timeo = 60;//当减到0时赋值为60
+                                    that.val('点击获取验证码');
+                                    clearInterval(timeStop);//清除定时器
+                                    that.removeAttr('disabled');//移除属性，可点击
+                                }
+                            }, 1000)
+                        } else {
+                            $.each(data.error, function (key, val) {
+                                $('#' + key + '_errmsg').show().text(val[0])
+                            })
                         }
-                 },
+                    },
                 })
 
 
-        })
-    }
+            })
+        }
 
-    // 注册
-    $('.btn-primary').on('click', function (event) {
+
+        // 登录
+        $('#register').on('click', function (event) {
         event.preventDefault();
-        var data = $('form').serializeArray();
-        console.log(data)
+        var data = $('form').serialize();
         $.post('{% url 'web:register' %}', data, function (data) {
             // 返回结果
             if (data.status) {
-                $('#register').html('注册成功')
-                $('#register').val('注册成功')
-                $('#register').text('注册成功')
+                location.href = '/web/' + data.data
             } else {
                 $.each(data.error, function (key, val) {
                         $('#' + key + '_errmsg').show().text(val[0])

@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django_redis import get_redis_connection
 import bcrypt
+from captcha.fields import CaptchaField
 
 from utils.tencent.sms import send_sms_single
 from web.forms.bootstrap import BootsTrap
@@ -13,34 +14,42 @@ from django.core.validators import RegexValidator
 from saas_29.settings import SMS_TEMPLATE
 
 
-class LoginForm(BootsTrap, forms.Form):
+class CaptchaForm(forms.Form):
+    captcha = CaptchaField()
+
+
+class LoginSmsForm(BootsTrap, forms.Form):
     """用户短信登录表单"""
     mobile_phpne = forms.CharField(label='手机号', validators=[RegexValidator(r'^1([3|4|5|6|7|8|9])\d{9}', '手机格式错误')])
     code = forms.CharField(label="验证码")
 
-    def clean_mobile(self):
+    def clean_mobile_phpne(self):
         mobile = self.cleaned_data['mobile_phpne']
-        qs = UserInfo.objects.filter(mobile_phpne=mobile)
-        if not qs:
-            raise ValidationError('手机号未注册')
+        user_object = UserInfo.objects.filter(mobile_phpne=mobile).first()
+        if not user_object:
+            raise ValidationError('手机号未注册++')
 
-        return mobile
+        return user_object
 
     def clean_code(self):
         code = self.cleaned_data['code']
         try:
-            mobile = self.cleaned_data['mobile_phpne']
+            user_object = self.cleaned_data['mobile_phpne']
         except KeyError:
             raise ValidationError('')
 
         # 从redis中取数据
         conn = get_redis_connection()
-        code_redis = conn.get(mobile)
-
-        if code_redis.decode() != code:
-            raise ValidationError('验证码错误-->')
-
-        return code
+        code_redis = conn.get(user_object.mobile_phpne)
+        try:
+            code_redis = code_redis.decode()
+            if code_redis != code:
+                pass
+                raise ValidationError('验证码错误')
+            pass
+            return code
+        except AttributeError:
+            raise ValidationError('请先获取验证码')
 
 
 class RegisterForm(BootsTrap, forms.ModelForm):
@@ -126,14 +135,21 @@ class SendSmSFoem(forms.Form):
     def clean_mobile_phpne(self):
 
         mobile_phpne = self.cleaned_data['mobile_phpne']
+        tpl = self.request.GET.get('tpl')
 
-        # 查看手机号是否被注册
-        qy = UserInfo.objects.filter(mobile_phpne=mobile_phpne)
-        if qy:
-            raise ValidationError('该手机号已注册')
+        if tpl == 'register':
+            # 查看手机号是否被注册
+            qy = UserInfo.objects.filter(mobile_phpne=mobile_phpne)
+            if qy:
+                raise ValidationError('该手机号已注册')
+        elif tpl == 'login':
+            # 查看手机号是否被注册
+            qy = UserInfo.objects.filter(mobile_phpne=mobile_phpne)
+            if not qy:
+                raise ValidationError('该手机号未注册--')
 
         # 查看短信模板是否正确
-        tpl = self.request.GET.get('tpl')
+
         if not SMS_TEMPLATE.get(tpl):
             raise ValidationError('请求格式错误')
 
