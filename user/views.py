@@ -5,6 +5,7 @@ from django_redis import get_redis_connection
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django import forms
+from captcha.fields import CaptchaField
 
 from utils.tencent.sms import send_sms_single
 from user.models import UserInfo
@@ -13,12 +14,16 @@ from user.models import UserInfo
 # Create your views here.
 def send_sms(request):
     """发送验证码"""
-    tpl = request.POST.get('tpl')
-    mobile = request.POST.get('mobile')
+    tpl = request.GET.get('tpl')
+    mobile = request.GET.get('mobile_phpne')
 
     qy = UserInfo.objects.filter(mobile_phpne=mobile)
-    if qy:
-        return JsonResponse({'filed': 'mobile_phpne', 'result': '2', 'errmsg': '该手机号已注册'})
+    if tpl == 'register':
+        if qy:
+            return JsonResponse({'filed': 'mobile_phpne', 'result': '2', 'errmsg': '该手机号已注册'})
+    elif tpl == 'login':
+        if not qy:
+            return JsonResponse({'filed': 'mobile_phpne', 'result': '2', 'errmsg': '该手机号未注册'})
 
     try:
         mobile = int(mobile)
@@ -31,6 +36,7 @@ def send_sms(request):
 
 
 class RegisterForm(forms.ModelForm):
+    email = forms.EmailField(label='邮箱')
     # 自定义表单的正则匹配
     mobile_phpne = forms.CharField(label="手机", validators=[RegexValidator(r'^1([3|4|5|6|7|8|9])\d{9}', '手机格式错误'),])
     # 自定义输入框的格式
@@ -49,6 +55,14 @@ class RegisterForm(forms.ModelForm):
         for name, filed in self.fields.items():
             filed.widget.attrs['class'] = 'form-control'
             filed.widget.attrs['placeholder'] = '请输入{}'.format(filed.label)
+
+    def clean_email(self):
+        """验证邮箱是否被注册过"""
+        email = self.cleaned_data['email']
+        qs = UserInfo.objects.filter(email=email)
+        if qs:
+            raise ValidationError('邮箱已被注册')
+        return email
 
     def clean_code(self):
         # 获取数据
@@ -91,29 +105,8 @@ def register(request):
         return render(request, 'user/register.html', {'form':form})
 
     if request.method == 'POST':
-        # {---------------}
-        #
-        # # 校验数据是否有空值
-        # if not all([username, email, password, password1, mobile, code]):
-        #     return JsonResponse({'filed': 'code', 'errmsg': '请填写完整'})
-        #
-        # # 向redis数据库中取出验证码
-        # from django_redis import get_redis_connection
-        # conn = get_redis_connection('default')
-        # redis_code = conn.get(mobile)
-        #
-        # # 校验数据
-        # try:
-        #     if code != redis_code.decode():
-        #         return JsonResponse({'filed': 'code', 'errmsg': '验证码错误'})
-        # except AttributeError:
-        #     return JsonResponse({'filed': 'code', 'errmsg': '请先获取验证码'})
-        #
-        # if password != password1:
-        #     return JsonResponse({'filed': 'password1', 'errmsg': '两次密码不一致'})
-        # ------
-        # try:
         form = RegisterForm(request.POST)
+        error = form.errors
         if not form.is_valid():
             return JsonResponse({'status': False, 'error': form.errors})
         # 获取数据
@@ -133,5 +126,57 @@ def register(request):
         #     return JsonResponse({'status': False, 'error': '注册失败'})
 
 
+class LoginForm(forms.Form):
+    """用户短信登录表单"""
+    mobile_phpne = forms.CharField(label='手机号', validators=[RegexValidator(r'^1([3|4|5|6|7|8|9])\d{9}', '手机格式错误')])
+    code = forms.CharField(label="验证码")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, filed in self.fields.items():
+            filed.widget.attrs['class'] = 'form-control'
+            filed.widget.attrs['placeholder'] = '请输入{}'.format(filed.label)
+
+    def clean_mobile(self):
+        mobile = self.cleaned_data['mobile_phpne']
+        qs = UserInfo.objects.filter(mobile_phpne=mobile)
+        if not qs:
+            raise ValidationError('手机号未注册')
+
+        return mobile
+
+    def clean_code(self):
+        code = self.cleaned_data['code']
+        mobile = self.cleaned_data['mobile_phpne']
+        conn = get_redis_connection()
+        code_redis = conn.get(mobile)
+        if code_redis.decode() != code:
+            raise ValidationError('验证码错误-->')
+
+        return code
+
+class CaptchaForm(forms.Form):
+    captcha = CaptchaField()
+
+
 def login(request):
-    return send_sms(request)
+    if request.method == 'GET':
+        login_form = LoginForm()
+        capt = CaptchaForm()
+
+        return render(request, 'user/login.html', {'form': login_form, 'capt': capt})
+    if request.method == 'POST':
+        """表单提交"""
+        login_form = LoginForm(request.POST)
+        capt = CaptchaForm(request.POST)
+
+        if login_form.is_valid() and capt.is_valid():
+            conn = get_redis_connection()
+            conn.delete(login_form.cleaned_data['mobile_phpne'])
+            return JsonResponse({'status': True})
+
+        for key, val in login_form.errors.items():
+            """动态结合两个表单的错误信息"""
+            capt.errors[key] = val
+
+        return JsonResponse({'status': False, 'error': capt.errors})

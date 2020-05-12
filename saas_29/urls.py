@@ -21,4 +21,6 @@ urlpatterns = [
     url(r'^user/', include('user.urls', namespace='user')),  # 测试走的路由
     url(r'^web/', include('web.urls', namespace='web')),  # 正式走的路由
 
+    url(r'^captcha/', include('captcha.urls')),  # 验证码
+
 ]

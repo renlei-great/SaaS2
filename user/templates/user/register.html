@@ -21,6 +21,7 @@
 <div class="account">
     <div class="title"><h1>用户注册</h1></div>
     <form>
+    {% csrf_token %}
         {% for field in form %}
             {% ifequal field.name 'code' %}
                 <div class="form-group">
@@ -68,7 +69,7 @@
             varmobile = $('#id_mobile_phpne').val()
             if (varmobile != "") {
                 var that = $(this)
-                $.post('/user/send', {'mobile': varmobile, 'tpl': 'register'}, function (data) {
+                $.get('/user/send', {'mobile': varmobile, 'tpl': 'register'}, function (data) {
 
                     if (data.result == '0') {
                         var timeo = 60;
