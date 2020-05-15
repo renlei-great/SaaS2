@@ -1,0 +1,112 @@
+{% extends 'layout/basic.html' %}
+{% load static %}
+
+{% block title %} 用户登录　{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/account.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+    .errmsg {
+        color: red;
+        position: absolute;
+        margin-top: 1px;
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div style="z-index: 1000;position: fixed" class="container">
+        <div class="account">
+        <div class="title"><h1>密码登录</h1></div>
+
+        <form novalidate>
+        {% csrf_token %}
+            {% for field in form %}
+                {% ifequal field.name 'code' %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label> :
+                        <div class="clearfix">
+                            <div class="col-md-6" style="padding-left: 0">{{ field }}</div>
+                            <div class="col-md-6">
+                                <input type="button" id="button_code" class="btn btn-default" value="点击获取验证码">
+                                <div class="errmsg" id="{{ field.name }}_errmsg" style="{display: none;color: red;}"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label> : {{ field }}
+                        <div class="errmsg" id="{{ field.name }}_errmsg" style="{display: none;color: red;}" ></div>
+                    </div>
+
+                {% endifequal %}
+             {% endfor %}
+            <div style="margin-top: 20px">
+            {% for ca in capt %}
+                {{ ca }}
+                <div class="errmsg" id="{{ ca.name }}_errmsg" style="{display: none;color: red;}"></div>
+            {% endfor %}
+        </div>
+        <br>
+        <div style="width: 100%"><a style="float: left" href="{% url 'web:login_sms' %}">跳转到手机登录？</a>  <a style="float: right" href="{% url 'web:register' %}">跳转到注册？</a></div>
+        <br>
+        <div>
+            <button style="margin-top: 20px; " type="button" id="loginbut" class="btn btn-primary">登录</button>
+        </div>
+
+
+        </form>
+    </div>
+    </div>
+    <canvas id="canvas"></canvas>
+{% endblock %}
+
+{% block js %}
+    <script src='{% static 'js/script.js' %}'></script>
+    <script  src="{% static 'js/TweenMax.min.js' %}"></script>
+    <script type="text/javascript">
+
+    // 调用刷新按钮
+    $('.captcha').click(refresh_capt)
+
+    // 绑定全部input框
+    $('input').on('focus', function () {
+        $('.errmsg').css('display', 'none')
+    })
+
+    // 登录
+    $('#loginbut').on('click', function (event) {
+        event.preventDefault();
+        var data = $('form').serializeArray();
+        console.log(data)
+        $.post('{% url 'web:login' %}', data, function (data) {
+            // 返回结果
+            if (data.status) {
+                location.href = data.data
+            } else {
+                $.each(data.error, function (key, val) {
+                        $('#' + key + '_errmsg').show().text(val[0])
+                    }
+                )
+                refresh_capt()
+            }
+        })
+
+    })
+
+    // 刷新验证码
+    function refresh_capt() {
+        $.getJSON("/captcha/refresh/", function (result) {
+                $('.captcha').attr('src', result['image_url']);
+                $('#id_captcha_0').val(result['key'])
+            });
+    }
+
+
+
+
+    </script>
+
+{% endblock %}

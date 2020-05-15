@@ -50,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'web.middleware.auth.AuthMiddleware'  # 自定义中间件
 ]
 
 ROOT_URLCONF = 'saas_29.urls'
@@ -145,6 +146,12 @@ CACHES = {
         }
     }
 }
+
+
+# ----captcha图片验证码的设置 ------------
+# CAPTCHA_OUTPUT_FORMAT = '%(hidden_field)s %(text_field)s %(image)s'
+CAPTCHA_FIELD_TEMPLATE = os.path.join(BASE_DIR, "web/templates/captcha/filed_templates.html")
+CAPTCHA_TEXT_FIELD_TEMPLATE = os.path.join(BASE_DIR, "web/templates/captcha/text_field.html")
 
 
 # 导入本地配置文件

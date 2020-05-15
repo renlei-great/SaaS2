@@ -21,6 +21,7 @@
             <div class="title"><h1>用户注册</h1></div>
             <form>
                 {% csrf_token %}
+
                 {% for field in form %}
                     {% ifequal field.name 'code' %}
                         <div class="form-group">
@@ -44,7 +45,9 @@
                         </div>
                     {% endifequal %}
                 {% endfor %}
+            <div style="width: 100%"><a style="padding-left: 200px" href="{% url 'web:login' %}">跳转到登录？</a></div>
                 <button id="register" style="margin-top: 5px" type="button" class="btn btn-primary">注册</button>
+
             </form>
         </div>
     </div>

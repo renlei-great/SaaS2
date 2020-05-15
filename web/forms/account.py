@@ -1,10 +1,12 @@
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.http import HttpResponse
 from django_redis import get_redis_connection
 import bcrypt
 from captcha.fields import CaptchaField
+
 
 from utils.tencent.sms import send_sms_single
 from web.forms.bootstrap import BootsTrap
@@ -16,6 +18,33 @@ from saas_29.settings import SMS_TEMPLATE
 
 class CaptchaForm(forms.Form):
     captcha = CaptchaField()
+
+
+class LoginForm(BootsTrap, forms.Form):
+    """用户密码登录表单"""
+    mobile_phpne = forms.CharField(label='邮箱或手机号')
+    password = forms.CharField(label='密码', widget=forms.PasswordInput())
+
+    def clean_mobile_phpne(self):
+        mobile = self.cleaned_data['mobile_phpne']
+        user_object = UserInfo.objects.filter(Q(mobile_phpne=mobile) | Q(email=mobile)).first()
+        if not user_object:
+            raise ValidationError('未注册')
+
+        return user_object
+
+    def clean_password(self):
+        try:
+            pwd = self.cleaned_data['mobile_phpne'].password
+        except KeyError:
+            raise ValidationError('')
+        password = self.cleaned_data['password']
+
+        if not bcrypt.checkpw(password.encode(), pwd.encode()):
+            self.add_error('mobile_phpne', '用户名或密码错误')
+            raise ValidationError('')
+
+        return password
 
 
 class LoginSmsForm(BootsTrap, forms.Form):
