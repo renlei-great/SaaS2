@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django_redis import get_redis_connection
 # 自定义表单的正则匹配
 from django.core.validators import RegexValidator
@@ -8,7 +8,7 @@ from django import forms
 from captcha.fields import CaptchaField
 
 from utils.tencent.sms import send_sms_single
-from user.models import UserInfo
+from user_app.user.models import UserInfo
 
 
 # Create your views here.

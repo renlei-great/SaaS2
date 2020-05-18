@@ -36,10 +36,10 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'user.apps.UserConfig',  # 注册用户模块
+    'user_app.user.apps.UserConfig',  # 注册用户模块
     'web.apps.WebConfig',  # 注册正式写项目的app
-    'captcha'  # 验证码
+    'user_app.project.apps.ProjectConfig',
+    'captcha',  # 验证码
 ]
 
 MIDDLEWARE = [

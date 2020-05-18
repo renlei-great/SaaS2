@@ -8,7 +8,7 @@ from web.models import UserInfo
 
 
 def login(request):
-    """短信登录"""
+    """密码登录"""
     if request.method == 'GET':
         login_form = LoginForm()
         captcha = CaptchaForm()
