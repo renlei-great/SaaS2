@@ -1,11 +1,9 @@
 
 from django.conf.urls import url
 
-from user_app.user import views
+from user_app.project.views import project, asterisk
 
 urlpatterns = [
-    url(r'^login', views.login),
-    url(r'^register', views.register),
-
-    url(r'^send', views.send_sms),
+    url(r'^project', project, name='project'),
+    url(r'^asterisk', asterisk, name='aster')
 ]

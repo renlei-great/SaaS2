@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static '/plugin/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static '/plugin/font-awesome/css/font-awesome.min.css' %}">
+    <style>
+        .navbar {
+            border-radius: 0;
+        }
+    </style>
+
+    {% block css %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-default">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{% url 'web:index' %}">SaaS-RenLei</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a href="#">项目</a></li>
+                <li><a href="#">企业方案</a></li>
+                <li><a href="#">帮助文档</a></li>
+                <li><a href="#">价格</a></li>
+            </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                {% if request.tracer %}
+                    <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                       aria-expanded="false">{{ request.tracer.username }}<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                    {#                    <li role="separator" class="divider">管理中心</li>#}
+                    <li><a href="#">管理中心</a></li>
+                    <li><a href="{% url 'web:exit' %}">退出</a></li>
+                {% else %}
+                    <li><a href="{% url 'web:login' %}">登录</a></li>
+                    <li><a href="{% url 'web:register' %}">注册</a></li>
+                {% endif %}
+                </ul>
+                </li>
+            </ul>
+            </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+<div>
+    <ul class="list-group" style="padding-top: 5px">
+        <li class="list-group-item" style="background: #8c8c8c">新建项目</li>
+            <div style="padding-left: 20px; padding: 20px">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>  新建项目
+                </button>
+
+                <!-- 模态框 -->
+                <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">创建项目</h4>
+                      </div>
+                      <div class="modal-body">
+                        <form id="form">
+                          <div class="form-group">
+                            <label for="recipient-name" class="control-label">项目名</label>
+                            <input name="project_name" type="text" class="form-control" id="recipient-name">
+                          </div>
+                            <div class="form-group">
+                                <label for="recipient-name" class="control-label">颜色</label>
+                                <br>
+                                <div class="btn-group " role="group" aria-label="...">
+                                <button type="button" class="btn btn-default ys" value="#c12e2a" style="background: #c12e2a">红色</button>
+                                <button type="button" class="btn btn-default ys" value="#2aabd2" style="background: #2aabd2">蓝色</button>
+                                <button type="button" class="btn btn-default ys" value="#d58512" style="background: #d58512">黄色</button>
+                                <input name="color" id="hi" type="text" hidden="hidden">
+                                </div>
+                            </div>
+                          <div class="form-group">
+                            <label for="message-text" class="control-label">项目描述</label>
+                            <textarea name="desc" class="form-control" id="message-text"></textarea>
+                          </div>
+                            {% csrf_token %}
+                        </form>
+                      </div>
+
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                        <button id="create_pro" type="button" class="btn btn-primary">创建</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+            </div>
+        <li class="list-group-item" style="background: #8c8c8c">星标项目</li>
+            <div style="padding-left: 20px">
+
+                <div class="row" style="padding-top: 15px">
+                    {% for asb in asterisks %}
+                    <div class="col-sm-6 col-md-3">
+                        <div class="thumbnail" style="background: {{ asb.color }}">
+                            <div class="caption">
+                                <h3>{{ asb.project_name }}</h3>
+                                <p>{{ asb.desc }}</p>
+                                <p><a pro="{{ asb.id }}" class="btn btn-primary xb" role="button">取消星标</a></p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        <li class="list-group-item" style="background: #8c8c8c">我创建的项目</li>
+            <div style="padding-left: 20px">
+
+                <div class="row" style="padding-top: 15px">
+                    {% for pro in pro_list %}
+                    <div class="col-sm-6 col-md-3">
+                        <div class="thumbnail" style="background: {{ pro.color }}">
+                            <div class="caption">
+                                <h3>{{ pro.project_name }}</h3>
+                                <p>{{ pro.desc }}</p>
+                                {% if pro.asterisk %}
+                                    <p><a pro="{{ pro.id }}" class="btn btn-primary xb" role="button">取消星标</a></p>
+                                {% else %}
+                                    <p><a pro="{{ pro.id }}" class="btn btn-default xb" role="button">星标</a></p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        <li class="list-group-item" style="background: #8c8c8c">我参与的项目</li>
+            <div style="padding-left: 20px">
+                <div class="row" style="padding-top: 15px">
+                    <div class="col-sm-6 col-md-3">
+                        <div class="thumbnail" style="background: #1b6d85">
+                            <div class="caption">
+                                <h3>Thumbnail label</h3>
+                                <p>...</p>
+                                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default" role="button">Bsutton</a></p>                        </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-3">
+                        <div class="thumbnail">
+                            <div class="caption">
+                                <h3>Thumbnail label</h3>
+                                <p>...</p>
+                                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default" role="button">Button</a></p>                        </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-3">
+                        <div class="thumbnail">
+                            <div class="caption">
+                                <h3>Thumbnail label</h3>
+                                <p>...</p>
+                                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default" role="button">Button</a></p>                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </ul>
+</div>
+
+{% block content %} {% endblock %}
+
+<script src="{% static '/js/jquery-3.4.1.js' %}"></script>
+<script src="{% static '/plugin/bootstrap/js/bootstrap.min.js' %}"></script>
+
+<script>
+    $('.ys').on('click', function () {
+        val = this.value
+        $('#hi').val(val)
+    })
+
+    // 创建项目
+    $('#create_pro').on('click', function () {
+        var pro = $('#form').serializeArray()
+        console.log(pro)
+        $.post('{% url 'user:project:project' %}', pro, function (res) {
+            if (res.stutic)
+            {
+                location.href = '/user/project/project'
+            }
+            else
+            {
+                alert('创建失败')
+            }
+        })
+    })
+
+    // 星标
+    $('.xb').on('click', function () {
+        var pro_id = $(this).attr('pro')
+        $.get("{% url 'user:project:aster' %}", {'pro_id': pro_id}, function (res) {
+            if (res.status)
+            {
+                location.href = '/user/project/project'
+            }
+            else
+            {
+                alert(res.error)
+            }
+        })
+    })
+
+</script>
+
+{% block js %}{% endblock %}
+</body>
+</html>

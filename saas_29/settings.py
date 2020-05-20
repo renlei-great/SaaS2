@@ -36,9 +36,10 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.staticfiles',
     'user_app.user.apps.UserConfig',  # 注册用户模块
-    'web.apps.WebConfig',  # 注册正式写项目的app
     'user_app.project.apps.ProjectConfig',
+    'web.apps.WebConfig',  # 注册正式写项目的app
     'captcha',  # 验证码
 ]
 
@@ -50,7 +51,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'web.middleware.auth.AuthMiddleware'  # 自定义中间件
+    # 'web.middleware.auth.AuthMiddleware',  # 自定义中间件
+    'user_app.user.middleware.auth.AuthMiddleware'  # 自定义测试中间件
 ]
 
 ROOT_URLCONF = 'saas_29.urls'
@@ -123,6 +125,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), os.path.join(BASE_DIR, '/web/static')]
+
 
 #--------- SMS 发送短信 ------------------
 SMS_APPID = "66666"

@@ -1,5 +1,5 @@
-{% load static %}
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -34,7 +34,7 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
                 {#        <li class="active"><a href="#">产品功能</a></li>#}
-                <li><a href="#">产品功能</a></li>
+                <li><a href="{% url 'user:project:project' %}">产品功能</a></li>
                 <li><a href="#">企业方案</a></li>
                 <li><a href="#">帮助文档</a></li>
                 <li><a href="#">价格</a></li>

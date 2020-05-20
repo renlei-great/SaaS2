@@ -69,7 +69,7 @@
             varmobile = $('#id_mobile_phpne').val()
             if (varmobile != "") {
                 var that = $(this)
-                $.get('/user/send', {'mobile': varmobile, 'tpl': 'register'}, function (data) {
+                $.get('/user/send', {'mobile_phpne': varmobile, 'tpl': 'register'}, function (data) {
 
                     if (data.result == '0') {
                         var timeo = 60;

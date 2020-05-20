@@ -1,5 +1,6 @@
 from django.utils.deprecation import MiddlewareMixin
-from web.models import UserInfo
+from user_app.user.models import UserInfo
+
 
 class AuthMiddleware(MiddlewareMixin):
 

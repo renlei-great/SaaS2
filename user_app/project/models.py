@@ -25,7 +25,7 @@ class UserPriceOrder(models.Model):
     unit_price = models.CharField(max_length=10, verbose_name='单价')
     actual_price = models.CharField(max_length=10, verbose_name='实际支付')
     create_time = models.DateField(auto_now_add=True, verbose_name='开始时间')
-    over_time = models.DateField(verbose_name='结束时间')
+    over_time = models.DateField(verbose_name='结束时间', null=True, blank=True)
     year_num = models.IntegerField(verbose_name='数量(年)')
     order_id = models.CharField(verbose_name='订单号', max_length=20)
 
@@ -38,9 +38,9 @@ class Project(models.Model):
     desc = models.CharField(verbose_name='描述', max_length=300)
     color = models.CharField(verbose_name='颜色', max_length=10)
     asterisk = models.BooleanField(verbose_name='是否星标', default=False)
-    part_num = models.CharField(verbose_name='参与人数', max_length=10)
+    part_num = models.CharField(default=1, verbose_name='参与人数', max_length=10)
     creator = models.ForeignKey(UserInfo, verbose_name='创建者')
-    used_space = models.CharField(verbose_name='已使用空间', max_length=50)
+    used_space = models.CharField(default=0, verbose_name='已使用空间', max_length=50)
 
     class Meta:
         verbose_name = '项目'

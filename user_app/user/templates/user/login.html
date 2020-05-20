@@ -129,6 +129,7 @@
             // 返回结果
             if (data.status) {
                 $('#register').text('登录成功')
+                location.href = data.data
             } else {
                 $.each(data.error, function (key, val) {
                         $('#' + key + '_errmsg').show().text(val[0])
