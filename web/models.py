@@ -75,7 +75,7 @@ class Project(models.Model):
     desc = models.CharField(verbose_name='描述', max_length=300, null=True, blank=True)
     color = models.SmallIntegerField(verbose_name='颜色', choices=color_chices, default=1)
     is_star = models.BooleanField(verbose_name='是否星标', default=False)
-    join_count = models.CharField(default=1, verbose_name='参与人数', max_length=10)
+    join_count = models.IntegerField(default=1, verbose_name='参与人数', max_length=10)
     creator = models.ForeignKey(verbose_name='创建者', to='UserInfo')
     used_space = models.IntegerField(verbose_name='已使用空间', default=0)
     create_time = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
