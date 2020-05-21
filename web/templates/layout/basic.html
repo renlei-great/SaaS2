@@ -44,10 +44,10 @@
                 {% if request.tracer %}
                     <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-                       aria-expanded="false">{{ request.tracer.username }}<span class="caret"></span></a>
+                       aria-expanded="false">{{ request.tracer.user.username }}<span class="caret"></span></a>
                     <ul class="dropdown-menu">
 {#                    <li role="separator" class="divider">管理中心</li>#}
-                    <li><a href="#">管理中心</a></li>
+                    <li><a href="{% url 'web:project' %}">管理中心</a></li>
                     <li><a href="{% url 'web:exit' %}">退出</a></li>
                 {% else %}
                     <li><a href="{% url 'web:login' %}">登录</a></li>

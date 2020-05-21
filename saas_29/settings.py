@@ -51,8 +51,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'web.middleware.auth.AuthMiddleware',  # 自定义中间件
-    'user_app.user.middleware.auth.AuthMiddleware'  # 自定义测试中间件
+    'web.middleware.auth.AuthMiddleware',  # 自定义中间件
+    # 'user_app.user.middleware.auth.AuthMiddleware'  # 自定义测试中间件
 ]
 
 ROOT_URLCONF = 'saas_29.urls'
@@ -156,6 +156,12 @@ CACHES = {
 # CAPTCHA_OUTPUT_FORMAT = '%(hidden_field)s %(text_field)s %(image)s'
 CAPTCHA_FIELD_TEMPLATE = os.path.join(BASE_DIR, "web/templates/captcha/filed_templates.html")
 CAPTCHA_TEXT_FIELD_TEMPLATE = os.path.join(BASE_DIR, "web/templates/captcha/text_field.html")
+
+
+# ----用户登录白名单 -----
+BLACK_REGEX_URL_LEST = [
+    '/web/project',
+]
 
 
 # 导入本地配置文件

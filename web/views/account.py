@@ -1,10 +1,12 @@
+import uuid
+import datetime
+
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django_redis import get_redis_connection
 
-from utils.tencent.sms import send_sms_single
 from web.forms.account import RegisterForm, SendSmSFoem, LoginSmsForm, CaptchaForm, LoginForm
-from web.models import UserInfo
+from web.models import UserInfo, PricePolicy, Transaction
 
 
 def login(request):
@@ -76,6 +78,19 @@ def register(request):
         if not form.is_valid():
             return JsonResponse({'status': False, 'error': form.errors})
         user = form.save()
+
+        # 添加用户交易记录
+        price_policy = PricePolicy.objects.filter(category=1, title="个人免费版").first()
+        Transaction.objects.create(
+            status=2,
+            order_id=str(uuid.uuid4()),
+            user=user,
+            price_policy=price_policy,
+            count=0,
+            actual_price=0,
+            start_time=datetime.datetime.now()
+        )
+
         conn = get_redis_connection()
         conn.delete(user.mobile_phpne)
 
