@@ -6,9 +6,8 @@
 
 {% block content %}
 <div >
-    <ul class="list-group" style="padding-top: 5px">
-        <li class="list-group-item" style="background: #8c8c8c">新建项目</li>
-            <div style="padding-left: 20px; padding: 20px">
+
+    <div style="padding-left: 20px; padding: 20px">
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">
                     <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>  新建项目
                 </button>
@@ -44,38 +43,47 @@
                 </div>
 
             </div>
-        <li class="list-group-item" style="background: #8c8c8c">星标项目</li>
-            <div style="padding-left: 20px">
+
+    <div class="panel panel-default">
+      <div class="panel-heading">星标项目</div>
+      <div class="panel-body">
+        <div style="padding-left: 20px">
 
                 <div class="row" style="padding-top: 15px">
-                    {% for asb in asterisks %}
+                    {% for asb in pro_stars %}
                     <div class="col-sm-6 col-md-3">
-                        <div class="thumbnail" style="background: {{ asb.color }}">
+                        <div class="thumbnail" style="background: {{ asb.get_color_display }}">
                             <div class="caption">
                                 <h3>{{ asb.project_name }}</h3>
                                 <p>{{ asb.desc }}</p>
-                                <p><a pro="{{ asb.id }}" class="btn btn-primary xb" role="button">取消星标</a></p>
+                                <p><a href="/web/asterisk/my/?pro_id={{ asb.id }}" pro="{{ asb.id }}" class="btn btn-primary" role="button">取消星标</a></p>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
+      </div>
+    </div>
 
-        <li class="list-group-item" style="background: #8c8c8c">我创建的项目</li>
-            <div style="padding-left: 20px">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">我创建的项目</h3>
+      </div>
+      <div class="panel-body">
+        <div style="padding-left: 20px">
 
                 <div class="row" style="padding-top: 15px">
                     {% for pro in pro_list %}
                     <div class="col-sm-6 col-md-3">
-                        <div class="thumbnail" style="background: {{ pro.color }}">
+                        <div class="thumbnail" style="background: {{ pro.get_color_display }}">
                             <div class="caption">
                                 <h3>{{ pro.project_name }}</h3>
                                 <p>{{ pro.desc }}</p>
-                                {% if pro.asterisk %}
-                                    <p><a pro="{{ pro.id }}" class="btn btn-primary xb" role="button">取消星标</a></p>
+                                {% if pro.is_star %}
+                                    <p><a href="{% url 'web:aster' 'my' %}?pro_id={{ pro.id }}" pro="{{ pro.id }}" class="btn btn-primary" role="button">取消星标</a></p>
                                 {% else %}
-                                    <p><a pro="{{ pro.id }}" class="btn btn-default xb" role="button">星标</a></p>
+                                    <p><a href="{% url 'web:aster' 'my' %}?pro_id={{ pro.id }}" pro="{{ pro.id }}" class="btn btn-default" role="button">星标</a></p>
                                 {% endif %}
                             </div>
                         </div>
@@ -83,38 +91,32 @@
                     {% endfor %}
                 </div>
             </div>
-        <li class="list-group-item" style="background: #8c8c8c">我参与的项目</li>
-            <div style="padding-left: 20px">
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">我参与的项目</h3>
+      </div>
+      <div class="panel-body">
+        <div style="padding-left: 20px">
+
                 <div class="row" style="padding-top: 15px">
+                    {% for pro_user in pro_user_list %}
                     <div class="col-sm-6 col-md-3">
-                        <div class="thumbnail" style="background: #1b6d85">
+                        <div class="thumbnail" style="background: {{ asb.get_color_display }}">
                             <div class="caption">
-                                <h3>Thumbnail label</h3>
-                                <p>...</p>
-                                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default" role="button">Bsutton</a></p>                        </div>
+                                <h3>{{ pro_user.project_name }}</h3>
+                                <p>{{ pro_user.desc }}</p>
+                                <p><a href="{% url 'web:aster' 'my' %}?pro_id={{ pro_user.id }}" pro="{{ pro_user.id }}" class="btn btn-primary" role="button">取消星标</a></p>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="col-sm-6 col-md-3">
-                        <div class="thumbnail">
-                            <div class="caption">
-                                <h3>Thumbnail label</h3>
-                                <p>...</p>
-                                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default" role="button">Button</a></p>                        </div>
-                        </div>
-                    </div>
-
-                    <div class="col-sm-6 col-md-3">
-                        <div class="thumbnail">
-                            <div class="caption">
-                                <h3>Thumbnail label</h3>
-                                <p>...</p>
-                                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default" role="button">Button</a></p>                        </div>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
-    </ul>
+      </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -146,10 +148,10 @@
     // 星标
     $('.xb').on('click', function () {
         var pro_id = $(this).attr('pro')
-        $.get("{% url 'user:project:aster' %}", {'pro_id': pro_id}, function (res) {
+        $.get("{% url 'web:project' %}", {'pro_id': pro_id}, function (res) {
             if (res.status)
             {
-                location.href = '/user/project/project'
+                location.href = '/web/project'
             }
             else
             {
