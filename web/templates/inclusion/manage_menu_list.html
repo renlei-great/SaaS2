@@ -1,0 +1,4 @@
+{% for li in li_list %}
+    <li {% if li.class %}class="active"{% endif %}><a href="{{ li.url }}">{{ li.title }}</a></li>
+{% endfor %}
+

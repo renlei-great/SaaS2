@@ -1,18 +1,21 @@
-
 from django import forms
 from django.core.validators import ValidationError
 
 from web.models import Project
 from web.forms.bootstrap import BootsTrap
+from web.forms.widgets import ColorRadioSelect
 
 
 class ProjectForm(BootsTrap, forms.ModelForm):
+    bootstrap_class_exclude = ['color']
     """创建项目表单"""
+
     class Meta:
         model = Project
         fields = ['project_name', 'color', 'desc']
         widgets = {
-            'desc': forms.Textarea
+            'desc': forms.Textarea,
+            'color': ColorRadioSelect,
         }
 
     def __init__(self, request, *args, **kwargs):
@@ -32,4 +35,3 @@ class ProjectForm(BootsTrap, forms.ModelForm):
             raise ValidationError('已达到最大项目数，请升级套餐')
 
         return name
-

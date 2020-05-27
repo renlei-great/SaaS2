@@ -22,7 +22,12 @@ def project(request):
         pro_user_stars = pro_user_list.filter(is_star=True)
         # 合并星标项目
         pro_stars = list(pro_stars)  # .extend(list(pro_user_stars))
+
+        for star in pro_stars:
+            star.cls = 'my'  # 动态添加属性,表示是什么类型的星标
+
         for star in pro_user_stars:
+            star.cls = 'join'
             pro_stars.append(star.project)
 
         countxt = {'pro_list': pro_list,
@@ -58,7 +63,7 @@ def asterisk(request, pro_type):
     try:
         pro_id = int(pro_id)
         if pro_type == 'my':
-            pro = Project.objects.get(pk=pro_id)
+            pro = Project.objects.get(pk=pro_id, creator=user)
         elif pro_type == 'join':
             pro = ProjectUser.objects.get(project=pro_id, user=user)
     except Exception as e:

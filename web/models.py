@@ -93,3 +93,15 @@ class ProjectUser(models.Model):
 
     class Meta:
         verbose_name = '项目参与者'
+
+
+class Wiki(models.Model):
+    project = models.ForeignKey(verbose_name='项目', to='Project')
+    title = models.CharField(verbose_name='标题', max_length=32)
+    content = models.TextField(verbose_name='内容', )
+
+    # 自关联
+    parent = models.ForeignKey(verbose_name='父文章', to='Wiki', related_name='children', null=True, blank=True)
+
+    def __str__(self):
+        return self.title

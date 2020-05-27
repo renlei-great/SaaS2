@@ -1,5 +1,7 @@
+{% load project %}
 <!DOCTYPE html>
 {% load static %}
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,6 +14,9 @@
         }
         .errmsg{
             color: red;
+        }
+        a{
+            text-decoration : none;
         }
     </style>
 
@@ -38,17 +43,19 @@
             <ul class="nav navbar-nav">
                 {#        <li class="active"><a href="#">产品功能</a></li>#}
                 <li class="dropdown active">
-                  <a href="#" class="dropdown-toggle " data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">项目 <span class="caret"></span></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="#">Action</a></li>
-                    <li><a href="#">Another action</a></li>
-                    <li><a href="#">Something else here</a></li>
-                    <li role="separator" class="divider"></li>
-                    <li><a href="#">Separated link</a></li>
-                    <li role="separator" class="divider"></li>
-                    <li><a href="#">One more separated link</a></li>
-                  </ul>
+                  <a href="#" class="dropdown-toggle " data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">项目 {{ request.tracer.project.project_name }}<span class="caret"></span></a>
+                    {% all_project_list request %}
                 </li>
+                {% if request.tracer.project %}
+
+                    {% manage_menu_list request %}
+{#                    <li class="active"><a href="{% url 'web:manage:dashboard' pro_id=request.tracer.project.id %}">概览</a></li>#}
+{#                    <li class="active"><a href="{% url 'web:manage:issues' pro_id=request.tracer.project.id %}">问题</a></li>#}
+{#                    <li class="active"><a href="{% url 'web:manage:statistics' pro_id=request.tracer.project.id %}">统计</a></li>#}
+{#                    <li class="active"><a href="{% url 'web:manage:wiki' pro_id=request.tracer.project.id %}">文件</a></li>#}
+{#                    <li class="active"><a href="{% url 'web:manage:wiki' pro_id=request.tracer.project.id %}">wiki</a></li>#}
+{#                    <li class="active"><a href="{% url 'web:manage:setting' pro_id=request.tracer.project.id %}">设置</a></li>#}
+                {% endif %}
             </ul>
 
             <ul class="nav navbar-nav navbar-right">

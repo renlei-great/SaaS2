@@ -1,9 +1,11 @@
 import datetime
+import re
 
+from django.db.models import Q
 from django.shortcuts import redirect
 from django.utils.deprecation import MiddlewareMixin
 
-from web.models import UserInfo, Transaction
+from web.models import UserInfo, Transaction, ProjectUser, Project
 from saas_29.settings import BLACK_REGEX_URL_LEST
 
 
@@ -11,9 +13,11 @@ class Tracer:
     # 封装自定义参数
     user = None
     price_policy = None
+    project = None
 
 
 class AuthMiddleware(MiddlewareMixin):
+    """自定义中间件"""
     def process_request(self, request):
         """如果用户已登录，则request中赋值"""
         request.tracer = Tracer()
@@ -21,8 +25,13 @@ class AuthMiddleware(MiddlewareMixin):
         user_object = UserInfo.objects.filter(id=user_id).first()
         request.tracer.user = user_object
 
-        # 用户登录验证，导入白名单
-        if request.path_info in BLACK_REGEX_URL_LEST:
+        # 取出url
+        try:
+            url = re.search(r'(/web/\w+)/', request.path_info + '/').group(1)
+        except AttributeError:
+            url = request.path_info
+        # 用户登录验证，导入黑名单
+        if url in BLACK_REGEX_URL_LEST:
             if request.tracer.user:
                 # 用户已经登录
                 # 获取用户的权限
@@ -39,4 +48,26 @@ class AuthMiddleware(MiddlewareMixin):
 
             else:
                 return redirect('web:login')
+
+    def process_view(self, request, view, args, kwargs):
+        # 如果url是manage开头，那么就进行判断项目id是不是他自己的
+        if not request.path_info.startswith('/web/manage'):
+            return
+
+        pro_id = kwargs.get('pro_id', None)
+        if not pro_id:
+            redirect('web:project')
+
+        user = request.tracer.user
+        # 查看是否有此用户的此项目
+        project = Project.objects.filter(id=int(pro_id), creator=user).first()
+        if not project:
+            project = ProjectUser.objects.filter(project=pro_id, user=user).first()
+
+        # 判断是否有此项目，是不是该用户的
+        if not project:
+            redirect('web:project')
+
+        request.tracer.project = project
+
 
