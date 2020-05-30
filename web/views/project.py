@@ -48,6 +48,8 @@ def project(request):
         pro_form.instance.creator = user
         pro_form.save()
 
+
+
         return JsonResponse({'stutic': True})
 
 

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'user_app.project.apps.ProjectConfig',
     'web.apps.WebConfig',  # 注册正式写项目的app
     'captcha',  # 验证码
+    'mdeditor',  # 富文本编辑器
 ]
 
 MIDDLEWARE = [
@@ -162,6 +163,11 @@ CAPTCHA_TEXT_FIELD_TEMPLATE = os.path.join(BASE_DIR, "web/templates/captcha/text
 BLACK_REGEX_URL_LEST = [
     '/web/project',
 ]
+
+
+# ---------富文本-----
+MEDIA_ROOT = os.path.join(BASE_DIR, 'web/static/media/')
+MEDIA_URL = '/media/'
 
 
 # 导入本地配置文件

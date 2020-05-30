@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.min.css' %}">
     <style>
         .panel{
             margin: 10px;
@@ -18,6 +19,17 @@
             border-right: 1px solid slategrey;
             min-height: 500px;
         }
+        .title-list{
+            border-right: 1px solid #dddddd;
+            min-height: 500px;
+        }
+        .title-list ul{
+            padding-left: 15px;
+        }
+        .title-list ul a{
+            display: block;
+            padding: 5px 0;
+        }
         .content{
             margin-left: -1px;
             border-left: 1px solid slategrey;
@@ -29,19 +41,95 @@
 {% block content %}
     <div class="panel panel-default">
       <div class="panel-heading">
-          <div style="padding-top: 5px"><h3 class="panel-title"><i class="fa fa-book" aria-hidden="true"></i> wiki 文档库</h3></div>
-          <div>
+          <div class="col-sm-12" style="padding-top: 5px"><h3 class=" panel-title"><i class="fa fa-book" aria-hidden="true"></i> wiki 文档库</h3></div>
+
+          <div class="col-sm-1">
             <a href="{% url 'web:manage:wiki_add' pro_id=request.tracer.project.id %}" type="button" class="btn btn-primary btn-default">
                 <i class="fa fa-plus-square" aria-hidden="true"></i> 新建
             </a>
           </div>
+          {% if wiki %}
+          <div class="col-sm-1">
+            <a href="{% url 'web:manage:wiki_edit' pro_id=request.tracer.project.id %}?wiki_id={{ wiki.id }}" type="button" class="btn btn-primary btn-default">
+                <i class="fa fa-magic" aria-hidden="true"></i> 编辑
+            </a>
+          </div>
+          <div class="col-sm-1">
+            <a href="{% url 'web:manage:wiki_del' pro_id=request.tracer.project.id %}?wiki_id={{ wiki.id }}" type="button" class="btn btn-primary btn-default">
+                <i class="fa fa-trash" aria-hidden="true"></i> 删除
+            </a>
+          </div>
+          {% endif %}
       </div>
       <div class="panel-body">
-        <div class="col-sm-3 cata">目录</div>
+        <div class="col-sm-3 cata title-list">目录
+            <ul id="catalog">
+
+            </ul>
+        </div>
         <div class="col-sm-9 content" style="text-align: center;padding-top: 70px ">
+            {% if wiki %}
+                <div id="preveviewmarkdown">
+                    <textarea>{{ wiki.content }}</textarea>
+                </div>
+            {% else %}
             <h4>《{{ request.tracer.project.project_name }}》wiki文档库</h4>
             <a href="{% url 'web:manage:wiki_add' pro_id=request.tracer.project.id %}"><i class="fa fa-plus-square" aria-hidden="true"></i> 新建文档</a>
+            {% endif %}
         </div>
       </div>
     </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'plugin/editor-md/editormd.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/flowchart.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/jquery.flowchart.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/marked.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/prettify.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/raphael.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/sequence-diagram.min.js' %}"></script>
+    <script src="{% static 'plugin/editor-md/lib/underscore.min.js' %}"></script>
+
+    <script>
+        $(function () {
+            Recatalog()
+            initpreveviewmarkdown()
+        });
+
+        // markdown预览
+        function initpreveviewmarkdown() {
+            editormd.markdownToHTML('preveviewmarkdown', {
+                htmlDecode: "style, script, iframe"
+            })
+
+        }
+
+        // 显示目录
+        function Recatalog() {
+            var url = "{% url 'web:manage:wiki' pro_id=request.tracer.project.id %}"
+            $.get("{% url 'web:manage:wiki_catalog' pro_id=request.tracer.project.id %}", function (res) {
+                if (res.status)
+                {
+                    $.each(res.catas, function (key, val) {
+                        var href = url + "?wiki_id=" + val.id
+                        var li = $('<li>').attr('id', 'id_' + val.id)
+                            .append($('<a>')
+                                .attr('href', href).text(val.title)).append($('<ul>'))
+                        if (!val.parent){
+                            $('#catalog').append(li)
+                        }
+                        else
+                        {
+                            {#alert($('#id_'+val.id))#}
+                            ii = '#id_' + val.parent
+                            $('#id_' + val.parent).children('ul').append(li)
+                        }
+                    })
+
+                }
+            })
+        }
+
+    </script>
 {% endblock %}

@@ -26,8 +26,10 @@ urlpatterns = [
 
         url('(?P<pro_id>\d+)/wiki$', wiki.wiki, name='wiki'),
         url(r'(?P<pro_id>\d+)/wiki/add$', wiki.wiki_add, name='wiki_add'),
+        url(r'(?P<pro_id>\d+)/wiki/catalog$', wiki.wiki_catalog, name='wiki_catalog'),
+        url(r'(?P<pro_id>\d+)/wiki/del$', wiki.wiki_del, name='wiki_del'),
+        url(r'(?P<pro_id>\d+)/wiki/edit$', wiki.wiki_edit, name='wiki_edit'),
 
         url('(?P<pro_id>\d+)/setting', manage.setting, name='setting'),
-    ], namespace='manage'))
-
+    ], namespace='manage')),
 ]

@@ -1,4 +1,5 @@
 from django.db import models
+from mdeditor.fields import MDTextField
 
 # Create your models here.
 
@@ -91,6 +92,10 @@ class ProjectUser(models.Model):
 
     create_time = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
 
+    # cos对象所需要的字段
+    bucket = models.CharField(verbose_name='桶名称', max_length=128)
+
+
     class Meta:
         verbose_name = '项目参与者'
 
@@ -98,10 +103,13 @@ class ProjectUser(models.Model):
 class Wiki(models.Model):
     project = models.ForeignKey(verbose_name='项目', to='Project')
     title = models.CharField(verbose_name='标题', max_length=32)
-    content = models.TextField(verbose_name='内容', )
+    content = models.TextField(verbose_name='内容')
 
     # 自关联
     parent = models.ForeignKey(verbose_name='父文章', to='Wiki', related_name='children', null=True, blank=True)
+
+    # 深度
+    depth = models.IntegerField(verbose_name='深度', default=1)
 
     def __str__(self):
         return self.title

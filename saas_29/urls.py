@@ -15,6 +15,9 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.conf.urls.static import static
+
+from saas_29 import settings
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -22,5 +25,10 @@ urlpatterns = [
     url(r'^web/', include('web.urls', namespace='web')),  # 正式走的路由
 
     url(r'^captcha/', include('captcha.urls')),  # 验证码
+    url(r'mdeditor/', include('mdeditor.urls')),  # 富文本
 
 ]
+
+if settings.DEBUG:
+    # static files (images, css, javascript, etc.)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
