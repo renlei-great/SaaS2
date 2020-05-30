@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 
 from web.models import Project, ProjectUser
 from web.forms.project import ProjectForm
+from utils.tencent.cos import create_cos
 
 
 def project(request):
@@ -45,10 +46,20 @@ def project(request):
         if not pro_form.is_valid():
             return JsonResponse({'stutic': False, 'error': pro_form.errors})
 
+        # 组织桶名
+        bucket = f'user-id-{user.id}-user-mobile-{user.mobile_phpne}-test-1302000219'
+        print(bucket)
         pro_form.instance.creator = user
+        pro_form.instance.bucket = bucket
         pro_form.save()
 
+        # 创建一个桶
+        client = create_cos()
 
+        response = client.create_bucket(
+            Bucket=pro_form.instance.bucket,
+            ACL='public-read'
+        )
 
         return JsonResponse({'stutic': True})
 

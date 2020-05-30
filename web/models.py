@@ -81,6 +81,10 @@ class Project(models.Model):
     used_space = models.IntegerField(verbose_name='已使用空间', default=0)
     create_time = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
 
+    # cos对象所需要的字段
+    bucket = models.CharField(verbose_name='桶名称', max_length=128)
+    region = models.CharField(verbose_name='地区', max_length=100, default='ap-nanjing')
+
     class Meta:
         verbose_name = '项目'
 
@@ -91,10 +95,6 @@ class ProjectUser(models.Model):
     is_star = models.BooleanField(verbose_name='是否星标', default=False)
 
     create_time = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
-
-    # cos对象所需要的字段
-    bucket = models.CharField(verbose_name='桶名称', max_length=128)
-
 
     class Meta:
         verbose_name = '项目参与者'

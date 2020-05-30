@@ -2,6 +2,7 @@ import json
 
 from django.shortcuts import render, reverse, redirect
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from web.forms.wiki import WikiForm
 from web.models import Wiki
@@ -96,3 +97,11 @@ def wiki_edit(request, pro_id):
             url = url + '?wiki_id={}'.format(wiki_form.instance.id)
 
             return redirect(url)
+
+
+@csrf_exempt
+def wiki_upload(request, pro_id):
+    """往cos上传文件"""
+    files_obj = request.FILES.get('editormd-image-file')
+
+    return None

@@ -84,6 +84,8 @@
     <script src="{% static 'plugin/editor-md/editormd.min.js' %}"></script>
 
     <script>
+         var URLPATH= "{% url 'web:manage:wiki_upload' pro_id=request.tracer.project.id %}"
+
         $(function () {
             Recatalog()
             initEditor()
@@ -95,7 +97,10 @@
             editormd('editor', {
                 placeholder: "请输入内容", // 输入框为空时的提示
                 height: 500,  // 高度
-                path: "{% static 'plugin/editor-md/lib/' %}"
+                path: "{% static 'plugin/editor-md/lib/' %}",
+                imageUpload: true,  // 支持本地上传图片
+                imageFormat: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+                imageUploadURL: URLPATH,
             })
 
         }
