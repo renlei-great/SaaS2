@@ -113,3 +113,29 @@ class Wiki(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class FileManage(models.Model):
+    file_type_choices = (
+        (1,'文件'),
+        (2, '文件夹'),
+    )
+    project = models.ForeignKey(verbose_name='项目', to='Project')
+    file_name = models.CharField(verbose_name='文件名', max_length=32)
+    file_cla = models.SmallIntegerField(verbose_name='文件类型', choices=file_type_choices)
+    file_size = models.IntegerField(verbose_name='文件大小', null=True, blank=True)
+    parent = models.ForeignKey(verbose_name='父目录', to='FileManage', related_name='children', null=True, blank=True)
+    key = models.CharField(verbose_name='文件存储在cos中的key', max_length=128)
+    update_user = models.ForeignKey(verbose_name='更新者', to='UserInfo')
+    file_path = models.CharField(verbose_name='文件路径', max_length=255, null=True,
+                                 blank=True)  # https://桶.cos.ap-chengdu/....
+
+    create_time = models.DateTimeField(verbose_name='更新时间', auto_now_add=True)
+
+
+
+
+
+
+
+

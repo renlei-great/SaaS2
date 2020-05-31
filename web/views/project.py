@@ -1,3 +1,5 @@
+import uuid
+
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
@@ -47,7 +49,7 @@ def project(request):
             return JsonResponse({'stutic': False, 'error': pro_form.errors})
 
         # 组织桶名
-        bucket = f'user-id-{user.id}-user-mobile-{user.mobile_phpne}-test-1302000219'
+        bucket = f'user-id-{user.id}-user-mobile-{user.mobile_phpne}-{str(uuid.uuid4())[1:5]}-1302000219'
         print(bucket)
         pro_form.instance.creator = user
         pro_form.instance.bucket = bucket
