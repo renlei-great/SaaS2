@@ -3,7 +3,7 @@ from django.conf.urls import url, include
 from web.views.account import register, send_sms, login_sms, login, exit
 from web.views.home import home_index
 from web.views.project import project, asterisk
-from web.views import manage, wiki
+from web.views import manage, wiki, file
 
 urlpatterns = [
     url(r'^register/$', register, name='register'),
@@ -24,6 +24,7 @@ urlpatterns = [
         url('(?P<pro_id>\d+)/issues', manage.issues, name='issues'),
         url('(?P<pro_id>\d+)/statistics', manage.statistics, name='statistics'),
 
+        # wiki管理
         url('(?P<pro_id>\d+)/wiki$', wiki.wiki, name='wiki'),
         url(r'(?P<pro_id>\d+)/wiki/add$', wiki.wiki_add, name='wiki_add'),
         url(r'(?P<pro_id>\d+)/wiki/catalog$', wiki.wiki_catalog, name='wiki_catalog'),
@@ -31,6 +32,10 @@ urlpatterns = [
         url(r'(?P<pro_id>\d+)/wiki/edit$', wiki.wiki_edit, name='wiki_edit'),
         url(r'(?P<pro_id>\d+)/wiki/upload$', wiki.wiki_upload, name='wiki_upload'),
 
+        # 文件管理
+        url('(?P<pro_id>\d+)/file$', file.file, name='file'),
+
+        # 配置
         url('(?P<pro_id>\d+)/setting', manage.setting, name='setting'),
     ], namespace='manage')),
 ]

@@ -63,6 +63,23 @@ def project(request):
             ACL='public-read'
         )
 
+        cors_config = {
+            'CORSRule': [
+                {
+                    'AllowedOrigin': '*',
+                    'AllowedMethod': ['GET', 'POST'],
+                    'AllowedHeader': '*',
+                    'ExposeHeader': '*',
+                    'MaxAgeSeconds': 500,
+                }
+            ]
+        }
+
+        client.put_bucket_cors(
+            Bucket=pro_form.instance.bucket,
+            CORSConfiguration=cors_config,
+        )
+
         return JsonResponse({'stutic': True})
 
 
