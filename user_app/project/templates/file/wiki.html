@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div>
+    <input type="file" name="upload_file" id="uploadFile" multiple>
+    {#    <input id="file-selector" type="file" multiple>#}
+</div>
+
+<script src="{% static '/js/jquery-3.4.1.js' %}"></script>
+<script src="{% static 'cos/cos-js-sdk-v5/cos-js-sdk-v5-0.5.22/dist/cos-js-sdk-v5.min.js' %}"></script>
+
+
+<script>
+    var cos;
+    $(function () {
+        initCos()
+    });
+
+
+    // 初始化cos对象
+    function initCos() {
+        {#var COS = require('cos-js-sdk-v5');#}
+        // 初始化实例
+        cos = new COS({
+            getAuthorization: function (options, callback) {
+                // 异步获取临时密钥
+                $.get("{% url 'user:project:wiki_sts' %}", {
+                    // 可从 options 取需要的参数
+                }, function (data) {
+                    var credentials = data && data.credentials;
+                    if (!data || !credentials) return console.error('credentials invalid');
+                    callback({
+                        TmpSecretId: credentials.tmpSecretId,
+                        TmpSecretKey: credentials.tmpSecretKey,
+                        XCosSecurityToken: credentials.sessionToken,
+                        // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
+                        StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
+                        ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
+                    });
+                });
+            }
+        });
+    }
+
+    // 上传文件
+    $('#uploadFile').on('change', function () {
+        // 获取上传的所有文件对象列表
+        var files = $(this)[0].files;
+        $.each(files, function (index, fileObject) {
+            var fileName = fileObject.name;
+            // 上传文件
+            cos.putObject({
+                Bucket: 'user-id-8-user-mobile-15561245051-1dba-1302000219', /* 必须 */
+                Region: 'ap-nanjing',     /* 存储桶所在地域，必须字段 */
+                Key: fileName,              /* 必须 */
+                StorageClass: 'STANDARD',
+                Body: fileObject, // 上传文件对象
+                onProgress: function (progressData) {
+                    console.log("文件上传进度-->", fileName, JSON.stringify(progressData));
+                }
+            }, function (err, data) {
+                console.log('开始了')
+                console.log(fileObject)
+                console.log(err || data);
+            });
+
+        })
+     })
+
+
+</script>
+
+</body>
+</html>

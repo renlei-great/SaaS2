@@ -1,0 +1,200 @@
+{% extends 'layout/manage.html' %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.min.css' %}">
+    <style>
+        .panel {
+            margin: 10px;
+        }
+
+        .panel-default .panel-heading {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
+        .panel-body {
+            padding: 0px;
+        }
+
+        .cata {
+            border-right: 1px solid slategrey;
+            min-height: 500px;
+        }
+
+        .title-list {
+            border-right: 1px solid #dddddd;
+            min-height: 500px;
+        }
+
+        .title-list ul {
+            padding-left: 15px;
+        }
+
+        .title-list ul a {
+            display: block;
+            padding: 5px 0;
+        }
+
+        .content {
+            margin-left: -1px;
+            border-left: 1px solid slategrey;
+            min-height: 600px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <div class="col-sm-12" style="padding-top: 5px"><h3 class=" panel-title"><i class="fa fa-folder"
+                                                                                        aria-hidden="true"></i> 文件库
+            </h3></div>
+
+            <div class="col-sm-1" style="padding-left: 5px;">
+                <a style="background-color: #1DC116"
+                   href="{% url 'web:manage:wiki_edit' pro_id=request.tracer.project.id %}?wiki_id={{ wiki.id }}"
+                   type="button" class="btn btn-primary btn-default">
+                    <i class="fa fa-upload" aria-hidden="true"></i> 上传文件
+                </a>
+            </div>
+
+            <div class="col-sm-1">
+                <button type="button" data-whatever="新建文件夹"
+                        class="btn btn-primary btn-default" data-toggle="modal" data-target=".bs-example-modal-sm">
+                    <i class="fa fa-plus-square" aria-hidden="true"></i> 新建文件夹
+                </button>
+                <!-- 摩太狂 -->
+                <div id="exampleModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog"
+                     aria-labelledby="mySmallModalLabel">
+                    <div class="modal-dialog modal-sm" role="document">
+                        <div class="modal-content" style="padding: 20px 20px 0px 20px">
+                            <div class="modal-header">
+                                <h4 style="font-weight: bold" class="modal-title" id="exampleModalLabel">New message</h4>
+                            </div>
+                            <div style="padding: 20px 20px">
+                                <form id="form">
+                                    {% csrf_token %}
+                                    {% for filed in file_form %}
+                                        <div class="form-group">
+                                            <label for="{{ filed.id_for_label }}"
+                                                   class="control-label">{{ filed.label }}:</label>
+                                            {{ filed }}
+                                            <div class="errmsg"></div>
+                                        </div>
+                                    {% endfor %}
+                                </form>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                    <button id="fileadd" type="button" class="btn btn-primary">提交</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+        {% if wiki %}
+            <div class="col-sm-1">
+                <a href="{% url 'web:manage:wiki_edit' pro_id=request.tracer.project.id %}?wiki_id={{ wiki.id }}"
+                   type="button" class="btn btn-primary btn-default">
+                    <i class="fa fa-magic" aria-hidden="true"></i> 编辑
+                </a>
+            </div>
+            <div class="col-sm-2">
+                <a href="{% url 'web:manage:wiki_del' pro_id=request.tracer.project.id %}?wiki_id={{ wiki.id }}"
+                   type="button" class="btn btn-primary btn-default">
+                    <i class="fa fa-trash" aria-hidden="true"></i> 删除
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    <div class="panel-body">
+        <div class="panel panel-default">
+            <!-- Table -->
+            <table class="table">
+                <thead>
+                <tr style="background-color: gainsboro">
+                    <th style="width: 200px; text-align: center">名称</th>
+                    <th style="width: 200px; text-align: center">文件大小</th>
+                    <th style="width: 200px; text-align: center">更新者</th>
+                    <th style="width: 400px; text-align: center">更新时间</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for file in files %}
+                    <tr>
+                        {% if file.file_cla == 2 %}
+                            <td style="width: 200px; text-align: left; padding-left: 7%"><a href="{% url 'web:manage:file' pro_id=request.tracer.project.id %}?file_id={{ file.id }}"><i
+                                    class="fa fa-folder-o" aria-hidden="true"></i> {{ file.file_name }}</a></td>
+                        {% else %}
+                            <td style="width: 200px; text-align: center">{{ file.file_name }}</td>
+                        {% endif %}
+                        {% if not file.file_size %}
+                            <td style="width: 200px; text-align: center">------</td>
+                        {% else %}
+                            <td style="width: 200px; text-align: center">{{ file.file_size }}</td>
+                        {% endif %}
+                        <td style="width: 200px; text-align: center">{{ file.update_user.username }}</td>
+                        <td style="width: 400px; text-align: center">{{ file.create_time }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+
+    <script>
+        $(function () {
+            initMoTaiKuang()
+            BindFileAdd()
+        });
+
+        // 替换模态框标题
+        function initMoTaiKuang() {
+            $('#exampleModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget) // Button that triggered the modal
+                var recipient = button.data('whatever') // Extract info from data-* attributes
+                // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+                // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+                var modal = $(this)
+                modal.find('.modal-title').text(recipient)
+                modal.find('.modal-body input').val(recipient)
+
+                $('#form')[0].reset()
+                modal.find('.errmsg').empty()
+
+
+            })
+        }
+
+        // 添加文件夹
+        function BindFileAdd() {
+            $('#fileadd').on('click', function () {
+                var form_data = $('form').serialize()
+                {#$.post("{% url 'web:manage:file_add' pro_id=request.tracer.project.id %}", form_data, function (res) {#}
+                $.post(location.href, form_data, function (res) {
+                    if (res.status) {
+                        location.href = location.href
+                    } else {
+                        $.each(res.error, function (key, val) {
+                            $('.errmsg').html(val)
+
+                        })
+                    }
+                })
+            })
+
+        }
+
+
+    </script>
+{% endblock %}
