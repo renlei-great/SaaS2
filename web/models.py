@@ -117,7 +117,7 @@ class Wiki(models.Model):
 
 class FileManage(models.Model):
     file_type_choices = (
-        (1,'文件'),
+        (1, '文件'),
         (2, '文件夹'),
     )
     project = models.ForeignKey(verbose_name='项目', to='Project')

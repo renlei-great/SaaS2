@@ -33,7 +33,8 @@ urlpatterns = [
         url(r'(?P<pro_id>\d+)/wiki/upload$', wiki.wiki_upload, name='wiki_upload'),
 
         # 文件管理
-        url('(?P<pro_id>\d+)/file$', file.file, name='file'),
+        url('(?P<pro_id>\d+)/file$', file.file, name='file'),  # 显示
+        url('(?P<pro_id>\d+)/file/add$', file.file_add, name='file_add'),
 
         # 配置
         url('(?P<pro_id>\d+)/setting', manage.setting, name='setting'),
