@@ -1,7 +1,8 @@
-import uuid
+import uuid, re
 
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+from pypinyin import pinyin, lazy_pinyin, Style
 
 from web.models import Project, ProjectUser
 from web.forms.project import ProjectForm
@@ -49,15 +50,19 @@ def project(request):
             return JsonResponse({'stutic': False, 'error': pro_form.errors})
 
         # 组织桶名
-        bucket = f'user-id-{user.id}-user-mobile-{user.mobile_phpne}-{str(uuid.uuid4())[1:5]}-1302000219'
-        print(bucket)
+        pro_name_str = pro_form.cleaned_data['project_name']
+        pro_name_list = pinyin(pro_name_str, style=Style.FIRST_LETTER)
+        pro_name = ",".join(re.findall('\w+', str(pro_name_list))).replace(',', '')
+        bucket = f'user-id-{user.id}-pro-name-{pro_name}-{str(uuid.uuid4())[1:5]}-1302000219'
+
+        # 数据库中创建项目
         pro_form.instance.creator = user
         pro_form.instance.bucket = bucket
         pro_form.save()
 
-        # 创建一个桶
+        # 链接cos
         client = create_cos()
-
+        # 创建桶
         response = client.create_bucket(
             Bucket=pro_form.instance.bucket,
             ACL='public-read'
@@ -67,7 +72,7 @@ def project(request):
             'CORSRule': [
                 {
                     'AllowedOrigin': '*',
-                    'AllowedMethod': ['GET', 'POST'],
+                    'AllowedMethod': ['GET', 'POST', 'PUT', 'DELETE', 'HEAD'],
                     'AllowedHeader': '*',
                     'ExposeHeader': '*',
                     'MaxAgeSeconds': 500,
@@ -89,7 +94,7 @@ def asterisk(request, pro_type):
     # 获取数据
     pro_id = request.GET.get('pro_id')
     # pro_type = request.GET.get('pro_type')
-    print(pro_type)
+    # print(pro_type)
 
     # 去数据库中查询此项目是否星标
     try:

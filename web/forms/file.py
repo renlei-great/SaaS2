@@ -34,3 +34,10 @@ class FileForm(BootsTrap, forms.ModelForm):
             raise ValidationError('文件已存在')
 
         return name
+
+
+class FileAddForm(BootsTrap, forms.ModelForm):
+    """添加文件表单"""
+    class Meta:
+        model = FileManage
+        fields=['file_name', 'file_size', ]

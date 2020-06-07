@@ -1,9 +1,11 @@
 
 from django.conf.urls import url, include
+
 from web.views.account import register, send_sms, login_sms, login, exit
 from web.views.home import home_index
 from web.views.project import project, asterisk
 from web.views import manage, wiki, file
+from utils.tencent import cos
 
 urlpatterns = [
     url(r'^register/$', register, name='register'),
@@ -33,8 +35,10 @@ urlpatterns = [
         url(r'(?P<pro_id>\d+)/wiki/upload$', wiki.wiki_upload, name='wiki_upload'),
 
         # 文件管理
-        url('(?P<pro_id>\d+)/file$', file.file, name='file'),  # 显示
-        url('(?P<pro_id>\d+)/file/add$', file.file_add, name='file_add'),
+        url('(?P<pro_id>\d+)/file$', file.file, name='file'),  # 显示，添加，编辑
+        url('(?P<pro_id>\d+)/file/del$', file.file_del, name='file_del'),  # 删除
+        url('(?P<pro_id>\d+)/add/file$', file.add_file, name='add_file'),  # 添加文件
+        url(r'(?P<pro_id>\d+)/acquire/sts/', file.acquire_sts, name='acquire_sts'),  # 前段获取cos临时凭证
 
         # 配置
         url('(?P<pro_id>\d+)/setting', manage.setting, name='setting'),

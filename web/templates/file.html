@@ -42,41 +42,72 @@
             border-left: 1px solid slategrey;
             min-height: 600px;
         }
+
+        .panel-default > .panel-heading .function .upload {
+            overflow: hidden;
+        }
+
+        .panel-default > .panel-heading .function input {
+            opacity: 0;
+            position: absolute;
+            bottom: 0;
+            width: 76px;
+            left: -2px;
+            overflow: hidden;
+        }
+
     </style>
 {% endblock %}
 
 {% block content %}
     <div class="panel panel-default">
         <div class="panel-heading">
-            <div class="col-sm-12" style="padding-top: 5px"><h3 class=" panel-title"><i class="fa fa-folder"
-                                                                                        aria-hidden="true"></i> 文件库
-            </h3></div>
+            <div style="padding-top: 5px">
+                <h3 class=" panel-title">
+                    <a href="{% url 'web:manage:file' pro_id=request.tracer.project.id %}">
+                        <i class="fa fa-folder" aria-hidden="true"></i> 文件库
+                    </a>
 
-            <div class="col-sm-1" style="padding-left: 5px;">
-                <a style="background-color: #1DC116"
-                   href="{% url 'web:manage:wiki_edit' pro_id=request.tracer.project.id %}?wiki_id={{ wiki.id }}"
-                   type="button" class="btn btn-primary btn-default">
-                    <i class="fa fa-upload" aria-hidden="true"></i> 上传文件
-                </a>
+                    {% for file in files_list %}
+                        /
+                        <a href="{% url 'web:manage:file' pro_id=request.tracer.project.id %}?file_id={{ file.id }}">
+                            {{ file.name }}
+                        </a>
+                    {% endfor %}
+
+                </h3>
             </div>
+            <div class="function">
+                <div class="col-sm-5" style="padding-left: 5px;">
+                    <a style="background-color: #1DC116"
+                       type="button" class="upload btn btn-primary btn-default">
+                        <div><i class="fa fa-upload" aria-hidden="true"></i> 上传文件</div>
+                        <input type="file" name="upload_file" id="uploadFile" multiple style="opacity: 0">
+                    </a>
+                </div>
 
-            <div class="col-sm-1">
+                <div class="col-sm-5">
                 <button type="button" data-whatever="新建文件夹"
-                        class="btn btn-primary btn-default" data-toggle="modal" data-target=".bs-example-modal-sm">
+                        class="btn btn-primary btn-default" data-toggle="modal" data-target="#exampleModal">
                     <i class="fa fa-plus-square" aria-hidden="true"></i> 新建文件夹
                 </button>
+                </div>
+            </div>
+
                 <!-- 摩太狂 -->
                 <div id="exampleModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog"
                      aria-labelledby="mySmallModalLabel">
                     <div class="modal-dialog modal-sm" role="document">
                         <div class="modal-content" style="padding: 20px 20px 0px 20px">
                             <div class="modal-header">
-                                <h4 style="font-weight: bold" class="modal-title" id="exampleModalLabel">New message</h4>
+                                <h4 style="font-weight: bold" class="modal-title" id="exampleModalLabel">New
+                                    message</h4>
                             </div>
                             <div style="padding: 20px 20px">
                                 <form id="form">
                                     {% csrf_token %}
                                     {% for filed in file_form %}
+                                        <input name="fid" id="fid_yc" value="" style="display: none">
                                         <div class="form-group">
                                             <label for="{{ filed.id_for_label }}"
                                                    class="control-label">{{ filed.label }}:</label>
@@ -94,8 +125,24 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
+                <div id="deleteModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog"
+                     aria-labelledby="mySmallModalLabel">
+                    <div class="modal-dialog modal-sm" role="document">
+                            <div class="alert alert-danger alert-dismissible fade in" role="alert">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                        aria-hidden="true">×</span></button>
+                                <h4>确定删除？</h4>
+                                <hr>
+                                <p>删除后将不可恢复，文件夹下的所有文件都将删除</p>
+                                <hr>
+                                <p style="text-align: right">
+                                    <button id="delfile" type="button" class="btn btn-danger">确定</button>
+                                    <button data-dismiss="modal" type="button" class="btn btn-default">取消</button>
+                                </p>
+                            </div>
+                        </div>
+                </div>
 
         </div>
         {% if wiki %}
@@ -123,13 +170,15 @@
                     <th style="width: 200px; text-align: center">文件大小</th>
                     <th style="width: 200px; text-align: center">更新者</th>
                     <th style="width: 400px; text-align: center">更新时间</th>
+                    <th style="width: 200px; text-align: center">操作</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for file in files %}
                     <tr>
                         {% if file.file_cla == 2 %}
-                            <td style="width: 200px; text-align: left; padding-left: 7%"><a href="{% url 'web:manage:file' pro_id=request.tracer.project.id %}?file_id={{ file.id }}"><i
+                            <td style="width: 200px; text-align: left; padding-left: 7%"><a
+                                    href="{% url 'web:manage:file' pro_id=request.tracer.project.id %}?file_id={{ file.id }}"><i
                                     class="fa fa-folder-o" aria-hidden="true"></i> {{ file.file_name }}</a></td>
                         {% else %}
                             <td style="width: 200px; text-align: center">{{ file.file_name }}</td>
@@ -141,6 +190,25 @@
                         {% endif %}
                         <td style="width: 200px; text-align: center">{{ file.update_user.username }}</td>
                         <td style="width: 400px; text-align: center">{{ file.create_time }}</td>
+                        <td style="width: 200px; text-align: center">
+                            {% if file.file_cla == 2 %}
+                                <a data-whatever="编辑文件夹"
+                                   data-toggle="modal"
+                                   data-target="#exampleModal"
+                                   data-name="{{ file.file_name }}"
+                                   data-fid="{{ file.id }}"
+                                >
+                                    <i class="fa fa-magic" aria-hidden="true"></i> 编辑
+                                </a>&nbsp;&nbsp;
+                            {% endif %}
+                            <a data-whatever="删除"
+                               data-toggle="modal"
+                               data-target="#deleteModal"
+                               data-name="{{ file.file_name }}"
+                               data-fid="{{ file.id }}">
+                                <i class="fa fa-trash" aria-hidden="true"></i> 删除
+                            </a>
+                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -151,14 +219,134 @@
 {% endblock %}
 
 {% block js %}
+    <script src="{% static 'cos/cos-js-sdk-v5/cos-js-sdk-v5-0.5.22/dist/cos-js-sdk-v5.min.js' %}"></script>
 
     <script>
+        var cos;
         $(function () {
             initMoTaiKuang()
+            initDelKuang()
             BindFileAdd()
+            DelectFile()
+            initCos()
         });
 
-        // 替换模态框标题
+        // 生成随机字符串
+        function _getRandomString(len) {
+            len = len || 32;
+            var $chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678'; // 默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1
+            var maxPos = $chars.length;
+            var pwd = '';
+            for (i = 0; i < len; i++) {
+                pwd += $chars.charAt(Math.floor(Math.random() * maxPos));
+            }
+            return pwd;
+        }
+
+        // 初始化cos对象
+        function initCos() {
+            // 初始化实例
+            cos = new COS({
+                getAuthorization: function (options, callback) {
+                    // 异步获取临时密钥
+                    $.get("{% url 'web:manage:acquire_sts' pro_id=request.tracer.project.id %}", {
+                        // 可从 options 取需要的参数
+                    }, function (data) {
+                        var credentials = data && data.credentials;
+                        if (!data || !credentials) return console.error('credentials invalid');
+                        callback({
+                            TmpSecretId: credentials.tmpSecretId,
+                            TmpSecretKey: credentials.tmpSecretKey,
+                            XCosSecurityToken: credentials.sessionToken,
+                            // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
+                            StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
+                            ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
+                        });
+                    });
+                }
+            });
+        }
+
+        // 上传文件
+        $('#uploadFile').on('change', function () {
+            // 获取上传的所有文件对象列表
+            var files = $(this)[0].files;
+            $.each(files, function (index, fileObject) {
+                var fileName = fileObject.name;
+                var fileSize = fileObject.size
+                var suf = fileName.split(".").pop(-1)
+                var rand = _getRandomString(4)
+                var key = 'pro_id-' + {{ request.tracer.project.id }} + '-user-id-' + {{ request.tracer.user.id }} + '- ' + rand +'.'+ suf
+                // 上传文件
+                cos.putObject({
+                    Bucket: "{{ request.tracer.project.bucket }}", /* 必须 */
+                    Region: 'ap-nanjing',     /* 存储桶所在地域，必须字段 */
+                    Key: key,              /* 必须 */
+                    StorageClass: 'STANDARD',
+                    Body: fileObject, // 上传文件对象
+                    onProgress: function (progressData) {
+                        console.log("文件上传进度-->", fileName, JSON.stringify(progressData));
+                    }
+                }, function (err, data) {
+                    if (data)
+                    {
+
+                        // 上传成功
+                        var file_path = data.Location
+                        data = {
+                            'file_name': fileName,
+                            'file_path': file_path,
+                            'key': key,
+                            'file_size': fileSize,
+                        }
+                        $.post(
+                            "{% url 'web:manage:add_file' pro_id='{{ request.tracer.project.id }}' %}",
+                            data,
+                            function (res) {
+                                console.log(res)
+
+                            }
+                        )
+                    }
+                    else if(err)
+                    {
+                        // 上传失败
+                        alert(err)
+                    }
+                });
+
+            })
+         })
+
+        // 删除文件
+        function DelectFile() {
+            $('#delfile').on('click', function () {
+                // 删除文件
+                var fid = $(this).attr('fid')
+                {#var url = "{% url 'web:manage:file_del' pro_id=1 %}"#}
+                 $.get(
+                    "{% url 'web:manage:file_del' pro_id=request.tracer.project.id %}",
+                    {"fid": fid},
+                    function (res) {
+                        if (res.status)
+                        {
+                            location.href = location.href
+                        }
+                        else
+                        {
+                            $.each(res.error, function (key, val) {
+                                $('.errmsg').html(val)
+
+                            })
+                        }
+
+                    }
+                 )
+
+            })
+        }
+
+        // 替换添加更改模态框标题
         function initMoTaiKuang() {
             $('#exampleModal').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget) // Button that triggered the modal
@@ -168,11 +356,33 @@
                 var modal = $(this)
                 modal.find('.modal-title').text(recipient)
                 modal.find('.modal-body input').val(recipient)
+                console.log(button)
 
-                $('#form')[0].reset()
-                modal.find('.errmsg').empty()
+                var name = button.data('name')
+                var fid = button.data('fid')
 
+                if (fid) {
+                    $('#id_file_name').val(name)
+                    $('#fid_yc').val(fid)
+                } else {
+                    $('#form')[0].reset()
+                    modal.find('.errmsg').empty()
+                }
 
+            })
+        }
+
+        // 替换删除模态框标题
+        function initDelKuang() {
+            $('#deleteModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget) // Button that triggered the modal
+                var recipient = button.data('whatever') // Extract info from data-* attributes
+                // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+                // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+                var modal = $(this)
+                var fid = button.data('fid')
+
+                $('#delfile').attr('fid', fid)
             })
         }
 
@@ -184,12 +394,14 @@
                 $.post(location.href, form_data, function (res) {
                     if (res.status) {
                         location.href = location.href
-                    } else {
-                        $.each(res.error, function (key, val) {
-                            $('.errmsg').html(val)
-
-                        })
                     }
+                    else
+                        {
+                            $.each(res.error, function (key, val) {
+                                $('.errmsg').html(val)
+
+                            })
+                        }
                 })
             })
 

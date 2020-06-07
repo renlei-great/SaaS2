@@ -159,7 +159,7 @@ CAPTCHA_FIELD_TEMPLATE = os.path.join(BASE_DIR, "web/templates/captcha/filed_tem
 CAPTCHA_TEXT_FIELD_TEMPLATE = os.path.join(BASE_DIR, "web/templates/captcha/text_field.html")
 
 
-# ----用户登录白名单 -----
+# ----用户登录黑名单 -----
 BLACK_REGEX_URL_LEST = [
     '/web/project',
 ]
