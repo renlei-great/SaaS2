@@ -87,62 +87,62 @@
                 </div>
 
                 <div class="col-sm-5">
-                <button type="button" data-whatever="新建文件夹"
-                        class="btn btn-primary btn-default" data-toggle="modal" data-target="#exampleModal">
-                    <i class="fa fa-plus-square" aria-hidden="true"></i> 新建文件夹
-                </button>
+                    <button type="button" data-whatever="新建文件夹"
+                            class="btn btn-primary btn-default" data-toggle="modal" data-target="#exampleModal">
+                        <i class="fa fa-plus-square" aria-hidden="true"></i> 新建文件夹
+                    </button>
                 </div>
             </div>
 
-                <!-- 摩太狂 -->
-                <div id="exampleModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog"
-                     aria-labelledby="mySmallModalLabel">
-                    <div class="modal-dialog modal-sm" role="document">
-                        <div class="modal-content" style="padding: 20px 20px 0px 20px">
-                            <div class="modal-header">
-                                <h4 style="font-weight: bold" class="modal-title" id="exampleModalLabel">New
-                                    message</h4>
-                            </div>
-                            <div style="padding: 20px 20px">
-                                <form id="form">
-                                    {% csrf_token %}
-                                    {% for filed in file_form %}
-                                        <input name="fid" id="fid_yc" value="" style="display: none">
-                                        <div class="form-group">
-                                            <label for="{{ filed.id_for_label }}"
-                                                   class="control-label">{{ filed.label }}:</label>
-                                            {{ filed }}
-                                            <div class="errmsg"></div>
-                                        </div>
-                                    {% endfor %}
-                                </form>
+            <!-- 摩太狂 -->
+            <div id="exampleModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog"
+                 aria-labelledby="mySmallModalLabel">
+                <div class="modal-dialog modal-sm" role="document">
+                    <div class="modal-content" style="padding: 20px 20px 0px 20px">
+                        <div class="modal-header">
+                            <h4 style="font-weight: bold" class="modal-title" id="exampleModalLabel">New
+                                message</h4>
+                        </div>
+                        <div style="padding: 20px 20px">
+                            <form id="form">
+                                {% csrf_token %}
+                                {% for filed in file_form %}
+                                    <input name="fid" id="fid_yc" value="" style="display: none">
+                                    <div class="form-group">
+                                        <label for="{{ filed.id_for_label }}"
+                                               class="control-label">{{ filed.label }}:</label>
+                                        {{ filed }}
+                                        <div class="errmsg"></div>
+                                    </div>
+                                {% endfor %}
+                            </form>
 
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                                    <button id="fileadd" type="button" class="btn btn-primary">提交</button>
-                                </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                <button id="fileadd" type="button" class="btn btn-primary">提交</button>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div id="deleteModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog"
-                     aria-labelledby="mySmallModalLabel">
-                    <div class="modal-dialog modal-sm" role="document">
-                            <div class="alert alert-danger alert-dismissible fade in" role="alert">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                        aria-hidden="true">×</span></button>
-                                <h4>确定删除？</h4>
-                                <hr>
-                                <p>删除后将不可恢复，文件夹下的所有文件都将删除</p>
-                                <hr>
-                                <p style="text-align: right">
-                                    <button id="delfile" type="button" class="btn btn-danger">确定</button>
-                                    <button data-dismiss="modal" type="button" class="btn btn-default">取消</button>
-                                </p>
-                            </div>
-                        </div>
+            <div id="deleteModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog"
+                 aria-labelledby="mySmallModalLabel">
+                <div class="modal-dialog modal-sm" role="document">
+                    <div class="alert alert-danger alert-dismissible fade in" role="alert">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">×</span></button>
+                        <h4>确定删除？</h4>
+                        <hr>
+                        <p>删除后将不可恢复，文件夹下的所有文件都将删除</p>
+                        <hr>
+                        <p style="text-align: right">
+                            <button id="delfile" type="button" class="btn btn-danger">确定</button>
+                            <button data-dismiss="modal" type="button" class="btn btn-default">取消</button>
+                        </p>
+                    </div>
                 </div>
+            </div>
 
         </div>
         {% if wiki %}
@@ -228,7 +228,7 @@
             initDelKuang()
             BindFileAdd()
             DelectFile()
-            initCos()
+            {#initCos()#}
         });
 
         // 生成随机字符串
@@ -271,12 +271,49 @@
         $('#uploadFile').on('change', function () {
             // 获取上传的所有文件对象列表
             var files = $(this)[0].files;
+            var fileList = []
+
+            $.each(files, function (index, fileObj) {
+                fileList.push({
+                    'file_name': fileObj.name,
+                    'file_size': fileObj.size
+                })
+            });
+
+            console.log(fileList)
+
+
             $.each(files, function (index, fileObject) {
                 var fileName = fileObject.name;
-                var fileSize = fileObject.size
+                var fileSize = fileObject.size;
                 var suf = fileName.split(".").pop(-1)
                 var rand = _getRandomString(4)
-                var key = 'pro_id-' + {{ request.tracer.project.id }} + '-user-id-' + {{ request.tracer.user.id }} + '- ' + rand +'.'+ suf
+                var key = 'pro_id-' + {{ request.tracer.project.id }} +'-user-id-' + {{ request.tracer.user.id }} +'- ' + rand + '.' + suf
+
+                // 获取临时凭证
+                cos = new COS({
+                    getAuthorization: function (options, callback) {
+                        // 异步获取临时密钥
+                        $.post(
+                            "{% url 'web:manage:acquire_sts' pro_id=request.tracer.project.id %}",
+                            {'file_name': fileName, 'file_size': fileSize}, // JSON.stringify(fileList),
+                            // 可从 options 取需要的参数
+                            function (data) {
+                                var credentials = data && data.credentials;
+                                {#if (!data || !credentials) return console.error('credentials invalid');#}
+                                callback({
+                                    TmpSecretId: credentials.tmpSecretId,
+                                    TmpSecretKey: credentials.tmpSecretKey,
+                                    XCosSecurityToken: credentials.sessionToken,
+                                    // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
+                                    StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
+                                    ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
+                                });
+                            });
+                    }
+                });
+
+
                 // 上传文件
                 cos.putObject({
                     Bucket: "{{ request.tracer.project.bucket }}", /* 必须 */
@@ -288,35 +325,25 @@
                         console.log("文件上传进度-->", fileName, JSON.stringify(progressData));
                     }
                 }, function (err, data) {
-                    if (data)
-                    {
-
+                    alert('继续')
+                    if (data) {
                         // 上传成功
                         var file_path = data.Location
+                        console.log(file_path)
                         data = {
                             'file_name': fileName,
                             'file_path': file_path,
                             'key': key,
                             'file_size': fileSize,
                         }
-                        $.post(
-                            "{% url 'web:manage:add_file' pro_id='{{ request.tracer.project.id }}' %}",
-                            data,
-                            function (res) {
-                                console.log(res)
-
-                            }
-                        )
-                    }
-                    else if(err)
-                    {
+                    } else if (err) {
                         // 上传失败
                         alert(err)
                     }
                 });
 
             })
-         })
+        })
 
         // 删除文件
         function DelectFile() {
@@ -324,16 +351,13 @@
                 // 删除文件
                 var fid = $(this).attr('fid')
                 {#var url = "{% url 'web:manage:file_del' pro_id=1 %}"#}
-                 $.get(
+                $.get(
                     "{% url 'web:manage:file_del' pro_id=request.tracer.project.id %}",
                     {"fid": fid},
                     function (res) {
-                        if (res.status)
-                        {
+                        if (res.status) {
                             location.href = location.href
-                        }
-                        else
-                        {
+                        } else {
                             $.each(res.error, function (key, val) {
                                 $('.errmsg').html(val)
 
@@ -341,7 +365,7 @@
                         }
 
                     }
-                 )
+                )
 
             })
         }
@@ -394,14 +418,12 @@
                 $.post(location.href, form_data, function (res) {
                     if (res.status) {
                         location.href = location.href
-                    }
-                    else
-                        {
-                            $.each(res.error, function (key, val) {
-                                $('.errmsg').html(val)
+                    } else {
+                        $.each(res.error, function (key, val) {
+                            $('.errmsg').html(val)
 
-                            })
-                        }
+                        })
+                    }
                 })
             })
 

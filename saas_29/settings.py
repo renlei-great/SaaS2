@@ -162,6 +162,7 @@ CAPTCHA_TEXT_FIELD_TEMPLATE = os.path.join(BASE_DIR, "web/templates/captcha/text
 # ----用户登录黑名单 -----
 BLACK_REGEX_URL_LEST = [
     '/web/project',
+    '/web/manage',  # 项目管理
 ]
 
 

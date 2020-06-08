@@ -1,6 +1,9 @@
+import json
+
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from sts.sts import Sts
+from django.views.decorators.csrf import csrf_exempt
 
 from web.models import FileManage
 from web.forms.file import FileForm
@@ -133,7 +136,16 @@ def file_del(request, pro_id):
 
 
 # http://192.168.223.134:8000/web/manage/23/acquire/sts/
+@csrf_exempt
 def acquire_sts(request, pro_id):
     """前端获取临时凭证"""
-    res = cos_acquire_sts(request)
-    return JsonResponse(res)
+    # 获取文件参数
+    file_name = request.POST.get('file_name')
+    file_size = request.POST.get('file_size')
+    per_file_size = int(request.tracer.price_policy.per_file_size) * 1024 * 1024
+    print(per_file_size, type(per_file_size))
+    # 查询用户的套餐
+    if int(file_size) > per_file_size:
+        return JsonResponse({'status': False, 'error': '单文件超出做大范围哦(单个文件最大５Ｍ)，请升级套餐'})
+
+    return JsonResponse({'s':'s'})
