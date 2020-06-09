@@ -6,7 +6,7 @@ from sts.sts import Sts
 from django.views.decorators.csrf import csrf_exempt
 
 from web.models import FileManage
-from web.forms.file import FileForm
+from web.forms.file import FileForm, FileAddForm
 from utils.tencent.cos import create_cos, cos_acquire_sts
 
 
@@ -36,7 +36,7 @@ def file(request, pro_id):
 
         file_form = FileForm(request)
 
-        return render(request, 'file.html', {'files': files, 'file_form': file_form, 'files_list': files_list[::-1]})
+        return render(request, 'file.html', {'files': files, 'file_form': file_form, 'files_list': files_list[::-1], 'file_id': file_id})
 
     if request.method == 'POST':
         """添加文件夹"""
@@ -70,15 +70,34 @@ def file(request, pro_id):
         return JsonResponse({'status': True})
 
 
+@csrf_exempt
 def add_file(request, pro_id):
     """创建文件"""
+    file_add_form = FileAddForm(request, data=request.POST)
     # 获取数据
-    project = request.tracer.project
-    user = request.tracer.user
-    file_id = request.GET.get('file_id', "")
+    if not file_add_form.is_valid():
+        # 验证失败
+        return JsonResponse({'status': False, 'error': file_add_form.errors[0]})
+    # 数据校验通过
+    # 获得真确字段，进行修改，然后在数据库中创建数据
+    instance = file_add_form.cleaned_data
+    instance.pop('etag')
+    instance.update({
+        'project': request.tracer.project,
+        'file_cla': 1,
+        'update_user': request.tracer.user,
+    })
+    data_dict = FileManage.objects.create(**instance)
 
+    res = {
+        'file_ame': data_dict.file_name,
+        'file_size': data_dict.file_size,
+        'update_user': data_dict.update_user.username,
+        'create_time': data_dict.create_time,
+        'file_id': data_dict.id,
+    }
 
-    return HttpResponse('ok')
+    return JsonResponse({'status': True, 'res': res})
 
 
 # http://192.168.223.134:8000/web/manage/6/file_del?file_id=1
@@ -140,12 +159,34 @@ def file_del(request, pro_id):
 def acquire_sts(request, pro_id):
     """前端获取临时凭证"""
     # 获取文件参数
-    file_name = request.POST.get('file_name')
-    file_size = request.POST.get('file_size')
-    per_file_size = int(request.tracer.price_policy.per_file_size) * 1024 * 1024
-    print(per_file_size, type(per_file_size))
-    # 查询用户的套餐
-    if int(file_size) > per_file_size:
-        return JsonResponse({'status': False, 'error': '单文件超出做大范围哦(单个文件最大５Ｍ)，请升级套餐'})
+    file_list = json.loads(request.body.decode())
 
-    return JsonResponse({'s':'s'})
+    # 查询用户的套餐单文件最大的限制
+    per_file_size = int(request.tracer.price_policy.per_file_size) * 1024 * 1024
+
+    # 查询用户的套餐单项目最大的容量限制
+    pro_file_space = int(request.tracer.price_policy.pro_space) * 1024 * 1024
+
+    # 用户现在所用空间
+    user_file_space = int(request.tracer.project.used_space)
+
+    # 定义一个存放文件总需要的空间的
+    file_num_size = 0
+
+    # 便利每一个文件进行判断
+    for file in file_list:
+        print(file)
+        # 判断单文件是否超出限制
+        if int(file['file_size']) > per_file_size:
+            return JsonResponse({'status': False, 'error': '单文件超出做大范围哦(单个文件最大５Ｍ)，请升级套餐'})
+        # 累加总需空间
+        file_num_size += int(file['file_size'])
+
+    # 判断用户是否超出总空间
+    if pro_file_space < user_file_space + file_num_size:
+        return JsonResponse({'status': False, 'error': '项目存储容量超出最大范围哦，请升级套餐'})
+
+    # 获取临时凭证
+    res = cos_acquire_sts(request)
+
+    return JsonResponse({'status': True, 'res': res})

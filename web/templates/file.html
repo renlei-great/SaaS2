@@ -56,6 +56,13 @@
             overflow: hidden;
         }
 
+        .upload-progress {
+            position: fixed;
+            right: 2px;
+            bottom: 2px;
+            width: 400px;
+        }
+
     </style>
 {% endblock %}
 
@@ -173,7 +180,7 @@
                     <th style="width: 200px; text-align: center">操作</th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody id="showlist">
                 {% for file in files %}
                     <tr>
                         {% if file.file_cla == 2 %}
@@ -215,6 +222,69 @@
             </table>
         </div>
     </div>
+
+    <div id="uploadProgress" class="upload-progress">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <i class="fa fa-cloud-upload" aria-hidden="true"></i> 上传进度
+            </div>
+            <table class="table">
+                <tbody id="addtbody" fid="{{ file_id }}">
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="hide">
+        <table class="progressTemplate">
+            <tr>
+                <td>
+                    <div class="name"></div>
+                    <div class="progress">
+                        <div class="progress-bar"
+                             role="progressbar"
+                             aria-valuemin="0"
+                             aria-valuenow="0"
+                             aria-valuemax="100"
+                             style="min-width: 2em;"
+                        >
+                            0%
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="hide">
+        <table class="proshowTemplate">
+            <tr>
+                <td style="width: 200px; text-align: center" class="name"></td>
+                <td style="width: 200px; text-align: center" class="size"></td>
+                <td style="width: 200px; text-align: center" class="updata_user"></td>
+                <td style="width: 400px; text-align: center" class="create_time"></td>
+                    <a data-whatever="下载文件"
+                       data-toggle="modal"
+                       data-target="#UplodeModal"
+                       data-name=""
+                       data-fid=""
+                        class="uploadtd"
+                    >
+                        <i class="fa fa-trash" aria-hidden="true"></i> 下载文件
+                    </a>
+                    <a data-whatever="删除"
+                       data-toggle="modal"
+                       data-target="#deleteModal"
+                       data-name=""
+                       data-fid=""
+                        class="delatetd"
+                    >
+                        <i class="fa fa-trash" aria-hidden="true"></i> 删除
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </div>
     </div>
 {% endblock %}
 
@@ -222,7 +292,7 @@
     <script src="{% static 'cos/cos-js-sdk-v5/cos-js-sdk-v5-0.5.22/dist/cos-js-sdk-v5.min.js' %}"></script>
 
     <script>
-        var cos;
+        {#var cos;#}
         $(function () {
             initMoTaiKuang()
             initDelKuang()
@@ -280,25 +350,18 @@
                 })
             });
 
-            console.log(fileList)
-
-
-            $.each(files, function (index, fileObject) {
-                var fileName = fileObject.name;
-                var fileSize = fileObject.size;
-                var suf = fileName.split(".").pop(-1)
-                var rand = _getRandomString(4)
-                var key = 'pro_id-' + {{ request.tracer.project.id }} +'-user-id-' + {{ request.tracer.user.id }} +'- ' + rand + '.' + suf
-
-                // 获取临时凭证
-                cos = new COS({
-                    getAuthorization: function (options, callback) {
-                        // 异步获取临时密钥
-                        $.post(
-                            "{% url 'web:manage:acquire_sts' pro_id=request.tracer.project.id %}",
-                            {'file_name': fileName, 'file_size': fileSize}, // JSON.stringify(fileList),
-                            // 可从 options 取需要的参数
-                            function (data) {
+            // {'file_name': fileName, 'file_size': fileSize}
+            // 获取临时凭证
+            cos = new COS({
+                getAuthorization: function (options, callback) {
+                    // 异步获取临时密钥
+                    $.post(
+                        "{% url 'web:manage:acquire_sts' pro_id=request.tracer.project.id %}",
+                        JSON.stringify(fileList), // JSON.stringify(fileList),
+                        // 可从 options 取需要的参数
+                        function (dat) {
+                            if (dat.status) {
+                                var data = dat.res;
                                 var credentials = data && data.credentials;
                                 {#if (!data || !credentials) return console.error('credentials invalid');#}
                                 callback({
@@ -309,10 +372,24 @@
                                     StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
                                     ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
                                 });
-                            });
-                    }
-                });
 
+                            } else {
+                                alert(error)
+                            }
+                        });
+                }
+            });
+
+            $.each(files, function (index, fileObject) {
+                var fileName = fileObject.name;
+                var fileSize = fileObject.size;
+                var suf = fileName.split(".").pop(-1)
+                var rand = _getRandomString(4)
+                var key = 'pro_id-' + {{ request.tracer.project.id }} +'-user-id-' + {{ request.tracer.user.id }} +'- ' + rand + '.' + suf
+
+                var $tr = $('.progressTemplate').find('tr').clone()
+                $tr.find('.name').html(fileName)
+                $('#addtbody').append($tr)
 
                 // 上传文件
                 cos.putObject({
@@ -322,20 +399,49 @@
                     StorageClass: 'STANDARD',
                     Body: fileObject, // 上传文件对象
                     onProgress: function (progressData) {
-                        console.log("文件上传进度-->", fileName, JSON.stringify(progressData));
+                        {#console.log("文件上传进度-->", fileName, JSON.stringify(progressData));#}
+                        var dat = JSON.stringify(progressData); // percent 更新进度条的值
+                        time_gx = progressData.percent * 100
+                        $tr.find('.progress-bar').html(progressData.percent * 100 + '%')
+                        $tr.find('.progress-bar').css('min-width', time_gx + '%')
                     }
                 }, function (err, data) {
-                    alert('继续')
-                    if (data) {
+                    console.log(data)
+                    if (data && data.statusCode === 200) {
                         // 上传成功
+                        var parent = $('#addtbody').attr('fid')
                         var file_path = data.Location
-                        console.log(file_path)
+                        var ETag = data.ETag
                         data = {
                             'file_name': fileName,
                             'file_path': file_path,
                             'key': key,
                             'file_size': fileSize,
-                        }
+                            'parent': parent,
+                            'etag': ETag,
+                        };
+
+                        $.post(
+                            "{% url 'web:manage:add_file' pro_id=request.tracer.project.id %}",
+                            data,
+                            function (res) {
+                                if (res.status) {
+                                    // 成功
+                                    var $shtr = $('.proshowTemplate').find('tr').clone()
+                                    $('#showlist').append($shtr)
+
+                                    {#$shtr.find(".name").html(res.res.file_name)#}
+                                    {#$shtr.find(".size").html(res.res.file_name)#}
+                                    {#$shtr.find(".updata_user").html(res.res.file_name)#}
+                                    {#$shtr.find(".create_time").html(res.res.file_name)#}
+                                    {#$shtr.find(".uploadtd").attr('data-name', res.res.file_name).attr('data-fid', res.res.file_id)#}
+                                    {#$shtr.find(".deletetd").attr('data-name', res.res.file_name).attr('data-fid', res.res.file_id)#}
+                                    {#$('#showlist').append($shtr)#}
+                                } else {
+                                    alert(res.error)
+                                }
+                            },
+                        )
                     } else if (err) {
                         // 上传失败
                         alert(err)
