@@ -39,6 +39,8 @@ urlpatterns = [
         url('(?P<pro_id>\d+)/file/del$', file.file_del, name='file_del'),  # 删除
         url('(?P<pro_id>\d+)/add/file$', file.add_file, name='add_file'),  # 添加文件
         url(r'(?P<pro_id>\d+)/acquire/sts/', file.acquire_sts, name='acquire_sts'),  # 前段获取cos临时凭证
+        url(r'(?P<pro_id>\d+)/upload/sts/', file.upload_sts, name='upload_sts'),  # 前段获取cos临时凭证
+
 
         # 配置
         url('(?P<pro_id>\d+)/setting', manage.setting, name='setting'),

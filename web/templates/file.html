@@ -188,7 +188,9 @@
                                     href="{% url 'web:manage:file' pro_id=request.tracer.project.id %}?file_id={{ file.id }}"><i
                                     class="fa fa-folder-o" aria-hidden="true"></i> {{ file.file_name }}</a></td>
                         {% else %}
-                            <td style="width: 200px; text-align: center">{{ file.file_name }}</td>
+                            <td style="width: 200px; text-align: center">
+                                <i class="fa fa-file" aria-hidden="true"></i>
+                                {{ file.file_name }}</td>
                         {% endif %}
                         {% if not file.file_size %}
                             <td style="width: 200px; text-align: center">------</td>
@@ -207,6 +209,16 @@
                                 >
                                     <i class="fa fa-magic" aria-hidden="true"></i> 编辑
                                 </a>&nbsp;&nbsp;
+                            {% else %}
+                                <a data-whatever="下载文件"
+                                   data-toggle="modal"
+                                   data-target="#UplodeModal"
+                                   data-name="{{ file.file_name }}"
+                                   data-fid="{{ file.id }}"
+                                   class="uploadtd"
+                                >
+                                    <i class="fa fa-cloud-download" aria-hidden="true"></i> 下载文件
+                                </a>
                             {% endif %}
                             <a data-whatever="删除"
                                data-toggle="modal"
@@ -223,7 +235,7 @@
         </div>
     </div>
 
-    <div id="uploadProgress" class="upload-progress">
+    <div id="uploadProgress" class="upload-progress hide">
         <div class="panel panel-primary">
             <div class="panel-heading">
                 <i class="fa fa-cloud-upload" aria-hidden="true"></i> 上传进度
@@ -257,27 +269,31 @@
         </table>
     </div>
     <div class="hide">
-        <table class="proshowTemplate">
+        <table id="proshowTemplate">
             <tr>
-                <td style="width: 200px; text-align: center" class="name"></td>
+                <td style="width: 200px; text-align: center">
+                    <i class="fa fa-file" aria-hidden="true"></i>
+                    <span class="name"></span>
+                </td>
                 <td style="width: 200px; text-align: center" class="size"></td>
                 <td style="width: 200px; text-align: center" class="updata_user"></td>
                 <td style="width: 400px; text-align: center" class="create_time"></td>
+                <td>
                     <a data-whatever="下载文件"
                        data-toggle="modal"
                        data-target="#UplodeModal"
                        data-name=""
                        data-fid=""
-                        class="uploadtd"
+                       class="uploadtd"
                     >
-                        <i class="fa fa-trash" aria-hidden="true"></i> 下载文件
+                        <i class="fa fa-cloud-download" aria-hidden="true"></i> 下载文件
                     </a>
                     <a data-whatever="删除"
                        data-toggle="modal"
                        data-target="#deleteModal"
                        data-name=""
                        data-fid=""
-                        class="delatetd"
+                       class="deletetd"
                     >
                         <i class="fa fa-trash" aria-hidden="true"></i> 删除
                     </a>
@@ -292,7 +308,7 @@
     <script src="{% static 'cos/cos-js-sdk-v5/cos-js-sdk-v5-0.5.22/dist/cos-js-sdk-v5.min.js' %}"></script>
 
     <script>
-        {#var cos;#}
+        var cos;
         $(function () {
             initMoTaiKuang()
             initDelKuang()
@@ -313,33 +329,13 @@
             return pwd;
         }
 
-        // 初始化cos对象
-        function initCos() {
-            // 初始化实例
-            cos = new COS({
-                getAuthorization: function (options, callback) {
-                    // 异步获取临时密钥
-                    $.get("{% url 'web:manage:acquire_sts' pro_id=request.tracer.project.id %}", {
-                        // 可从 options 取需要的参数
-                    }, function (data) {
-                        var credentials = data && data.credentials;
-                        if (!data || !credentials) return console.error('credentials invalid');
-                        callback({
-                            TmpSecretId: credentials.tmpSecretId,
-                            TmpSecretKey: credentials.tmpSecretKey,
-                            XCosSecurityToken: credentials.sessionToken,
-                            // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
-                            StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
-                            ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
-                        });
-                    });
-                }
-            });
-        }
-
         // 上传文件
         $('#uploadFile').on('change', function () {
             // 获取上传的所有文件对象列表
+            $('#uploadProgress').removeClass('hide')
+
+            $('#addtbody').empty()
+
             var files = $(this)[0].files;
             var fileList = []
 
@@ -373,6 +369,8 @@
                                     ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
                                 });
 
+
+
                             } else {
                                 alert(error)
                             }
@@ -390,6 +388,7 @@
                 var $tr = $('.progressTemplate').find('tr').clone()
                 $tr.find('.name').html(fileName)
                 $('#addtbody').append($tr)
+
 
                 // 上传文件
                 cos.putObject({
@@ -427,16 +426,15 @@
                             function (res) {
                                 if (res.status) {
                                     // 成功
-                                    var $shtr = $('.proshowTemplate').find('tr').clone()
-                                    $('#showlist').append($shtr)
-
-                                    {#$shtr.find(".name").html(res.res.file_name)#}
-                                    {#$shtr.find(".size").html(res.res.file_name)#}
-                                    {#$shtr.find(".updata_user").html(res.res.file_name)#}
-                                    {#$shtr.find(".create_time").html(res.res.file_name)#}
-                                    {#$shtr.find(".uploadtd").attr('data-name', res.res.file_name).attr('data-fid', res.res.file_id)#}
-                                    {#$shtr.find(".deletetd").attr('data-name', res.res.file_name).attr('data-fid', res.res.file_id)#}
+                                    var $shtr = $('#proshowTemplate').find('tr').clone()
                                     {#$('#showlist').append($shtr)#}
+                                    $shtr.find(".name").text(res.res.file_name)
+                                    $shtr.find(".size").text(res.res.file_size)
+                                    $shtr.find(".updata_user").text(res.res.update_user)
+                                    $shtr.find(".create_time").text(res.res.create_time)
+                                    $shtr.find(".uploadtd").attr('data-name', res.res.file_name).attr('data-fid', res.res.file_id)
+                                    $shtr.find(".deletetd").attr('data-name', res.res.file_name).attr('data-fid', res.res.file_id)
+                                    $('#showlist').append($shtr)
                                 } else {
                                     alert(res.error)
                                 }
@@ -449,6 +447,54 @@
                 });
 
             })
+        })
+
+        //　下载文件
+        $('.uploadtd').on('click', function () {
+            // 获取当前文件的id
+            var fid = $(this).attr('data-fid')
+            var key = ''
+            var bucket = ''
+            console.log(key, bucket)
+            // 获取临时凭证
+            cos = new COS({
+                getAuthorization: function (options, callback) {
+                    // 异步获取临时密钥
+                    $.get(
+                        "{% url 'web:manage:upload_sts' pro_id=request.tracer.project.id %}",
+                        {'fid': fid},   // 可从 options 取需要的参数
+                        function (data) {
+                            callback({
+                                TmpSecretId: data.res.credentials.tmpSecretId,
+                                TmpSecretKey: data.res.credentials.tmpSecretKey,
+                                XCosSecurityToken: data.res.credentials.sessionToken,
+                                // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
+                                StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
+                                ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
+                            });
+                            key = data.key
+                            bucket = data.bucket
+                            console.log('竟来了')
+                            console.log(key, bucket)
+                        });
+                }
+            });
+            console.log('出来了')
+            console.log(key, bucket)
+
+            // 获取下载地址，并进行下载
+            cos.getObjectUrl({
+                {#Bucket: 'user-id-8-pro-name-wjcs-5ad5-1302000219',#}
+                Bucket: bucket,
+                Region: 'ap-nanjing',     /* 存储桶所在地域，必须字段 */
+                {#Key: 'pro_id-23-user-id-8- 32T2.jpg',#}
+                Key: key,
+                Sign: true
+            }, function (err, data) {
+                if (err) return console.log(err);
+                var downloadUrl = data.Url + (data.Url.indexOf('?') > -1 ? '&' : '?') + 'response-content-disposition=attachment'; // 补充强制下载的参数
+                window.open(downloadUrl); // 这里是新窗口打开 url，如果需要在当前窗口打开，可以使用隐藏的 iframe 下载，或使用 a 标签 download 属性协助下载
+            });
         })
 
         // 删除文件

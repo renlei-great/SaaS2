@@ -22,7 +22,7 @@ def file(request, pro_id):
             files = FileManage.objects.filter(
                 project_id=pro_id,
                 update_user=request.tracer.user,
-                parent=file_id)
+                parent=file_id).order_by('-file_cla')
 
             file = FileManage.objects.get(id=file_id)
 
@@ -32,11 +32,11 @@ def file(request, pro_id):
 
         else:
             # 查询根文件和文件夹
-            files = FileManage.objects.filter(project_id=pro_id, parent=None)
+            files = FileManage.objects.filter(project_id=pro_id, parent=None).order_by('-file_cla')
 
         file_form = FileForm(request)
 
-        return render(request, 'file.html', {'files': files, 'file_form': file_form, 'files_list': files_list[::-1], 'file_id': file_id})
+        return render(request, 'file.html', {'files': files, 'file_form': file_form, 'files_list': files_list, 'file_id': file_id})
 
     if request.method == 'POST':
         """添加文件夹"""
@@ -77,7 +77,7 @@ def add_file(request, pro_id):
     # 获取数据
     if not file_add_form.is_valid():
         # 验证失败
-        return JsonResponse({'status': False, 'error': file_add_form.errors[0]})
+        return JsonResponse({'status': False, 'error': file_add_form.errors})
     # 数据校验通过
     # 获得真确字段，进行修改，然后在数据库中创建数据
     instance = file_add_form.cleaned_data
@@ -89,11 +89,14 @@ def add_file(request, pro_id):
     })
     data_dict = FileManage.objects.create(**instance)
 
+    request.tracer.project.used_space += data_dict.file_size
+    request.tracer.project.save()
+
     res = {
-        'file_ame': data_dict.file_name,
+        'file_name': data_dict.file_name,
         'file_size': data_dict.file_size,
         'update_user': data_dict.update_user.username,
-        'create_time': data_dict.create_time,
+        'create_time': data_dict.create_time.strftime('%Y年%m月%d日 %H:%M'),
         'file_id': data_dict.id,
     }
 
@@ -122,30 +125,37 @@ def file_del(request, pro_id):
 
     # 判断是删除文件还是文件夹
     for file in file_list:
-        files = FileManage.objects.filter(parent=file)
-        if not files:
-            continue
-        for f in files:
-            if f.file_cla == 2:
-                # 文件夹
-                file_list.append(f)
-            else:
-                # 文件
-                file_size += f.file_size
-                key_list.append({'Key': f.key})
+        # 先判断类型
+        if file.file_cla == 2:
+            files = FileManage.objects.filter(parent=file)
+            # 文件夹
+            for f in files:
+                if f.file_cla == 2:
+                    # 文件夹
+                    file_list.append(f)
+                else:
+                    # 文件
+                    file_size += f.file_size
+                    key_list.append({'Key': f.key})
+        else:
+            # 文件
+            file_size += file.file_size
+            key_list.append({'Key': file.key})
 
-    # 创建cos对象并进行删除
-    client = create_cos()
-    client.delete_objects(
-        Bucket=project.bucket,
-        Delete={
-            "Quiet": "true",
-            "Object": key_list
-        }
-    )
+    if key_list:  # 当有删除数据的时候执行
+        # 创建cos对象并进行删除
+        client = create_cos()
+        client.delete_objects(
+            Bucket=project.bucket,
+            Delete={
+                "Quiet": "true",
+                "Object": key_list
+            }
+        )
 
     # 归还空间
     project.used_space = project.used_space - file_size
+    project.save()
 
     # 删除文件或文件夹:删除时不能复制？
     FileManage.objects.get(id=pid, project=project, update_user=user).delete()
@@ -190,3 +200,26 @@ def acquire_sts(request, pro_id):
     res = cos_acquire_sts(request)
 
     return JsonResponse({'status': True, 'res': res})
+
+
+# http://192.168.223.134:8000/web/manage/23/upload/sts/
+@csrf_exempt
+def upload_sts(request, pro_id):
+    """前端获取临时凭证"""
+    #　获取要下载的文件id
+    fid = request.GET.get('fid')
+
+    # 查询要下载的文件对象
+    file = FileManage.objects.get(
+        id=fid,
+        update_user=request.tracer.user,
+        project=request.tracer.project
+    )
+
+    # 获取临时凭证
+    res = cos_acquire_sts(request)
+    return JsonResponse({
+        'res': res,
+        'key': file.key,
+        'bucket': request.tracer.project.bucket
+    })
