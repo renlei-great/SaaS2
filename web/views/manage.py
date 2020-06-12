@@ -20,4 +20,4 @@ def statistics(request, pro_id):
 
 def setting(request, pro_id):
     """设置"""
-    return render(request, 'setting.html')
+    return render(request, 'vsetting.html')

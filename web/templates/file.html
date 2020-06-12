@@ -449,13 +449,8 @@
             })
         })
 
-        //　下载文件
-        $('.uploadtd').on('click', function () {
-            // 获取当前文件的id
-            var fid = $(this).attr('data-fid')
-            var key = ''
-            var bucket = ''
-            console.log(key, bucket)
+        function a {
+                        console.log(key, bucket)
             // 获取临时凭证
             cos = new COS({
                 getAuthorization: function (options, callback) {
@@ -482,7 +477,6 @@
             console.log('出来了')
             console.log(key, bucket)
 
-            // 获取下载地址，并进行下载
             cos.getObjectUrl({
                 {#Bucket: 'user-id-8-pro-name-wjcs-5ad5-1302000219',#}
                 Bucket: bucket,
@@ -495,7 +489,17 @@
                 var downloadUrl = data.Url + (data.Url.indexOf('?') > -1 ? '&' : '?') + 'response-content-disposition=attachment'; // 补充强制下载的参数
                 window.open(downloadUrl); // 这里是新窗口打开 url，如果需要在当前窗口打开，可以使用隐藏的 iframe 下载，或使用 a 标签 download 属性协助下载
             });
-        })
+        }
+
+        //　下载文件
+        $('.uploadtd').on('click', function () {
+            // 获取当前文件的id
+            var fid = $(this).attr('data-fid')
+
+            // 进行下载
+            $.get()
+
+        });
 
         // 删除文件
         function DelectFile() {

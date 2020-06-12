@@ -204,7 +204,7 @@ def acquire_sts(request, pro_id):
 
 # http://192.168.223.134:8000/web/manage/23/upload/sts/
 @csrf_exempt
-def upload_sts(request, pro_id):
+def upload_file(request, pro_id):
     """前端获取临时凭证"""
     #　获取要下载的文件id
     fid = request.GET.get('fid')
@@ -217,9 +217,19 @@ def upload_sts(request, pro_id):
     )
 
     # 获取临时凭证
-    res = cos_acquire_sts(request)
+    client = create_cos()
+
+    # 获取文件到本地
+    response = client.get_object(
+        Bucket='examplebucket-1250000000',
+        Key='picture.jpg',
+    )
+    print(response['Body'])
+    a = response['Body']
+
+
+
     return JsonResponse({
-        'res': res,
         'key': file.key,
         'bucket': request.tracer.project.bucket
     })

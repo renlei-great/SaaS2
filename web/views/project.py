@@ -3,6 +3,7 @@ import uuid, re
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from pypinyin import pinyin, lazy_pinyin, Style
+from qcloud_cos import CosClientError
 
 from web.models import Project, ProjectUser
 from web.forms.project import ProjectForm
@@ -55,18 +56,22 @@ def project(request):
         pro_name = ",".join(re.findall('\w+', str(pro_name_list))).replace(',', '')
         bucket = f'user-id-{user.id}-pro-name-{pro_name}-{str(uuid.uuid4())[1:5]}-1302000219'
 
+        # 链接cos
+        client = create_cos()
+        try:
+            # 创建桶
+            response = client.create_bucket(
+                Bucket=bucket,
+                ACL='public-read'
+            )
+        except CosClientError as e:
+            pro_form.add_error('project_name', '项目名格式是非法的，只允许数字、字母和- !')
+            return JsonResponse({'stutic': False, 'error': pro_form.errors})
+
         # 数据库中创建项目
         pro_form.instance.creator = user
         pro_form.instance.bucket = bucket
         pro_form.save()
-
-        # 链接cos
-        client = create_cos()
-        # 创建桶
-        response = client.create_bucket(
-            Bucket=pro_form.instance.bucket,
-            ACL='public-read'
-        )
 
         cors_config = {
             'CORSRule': [

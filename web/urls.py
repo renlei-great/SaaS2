@@ -4,7 +4,7 @@ from django.conf.urls import url, include
 from web.views.account import register, send_sms, login_sms, login, exit
 from web.views.home import home_index
 from web.views.project import project, asterisk
-from web.views import manage, wiki, file
+from web.views import manage, wiki, file, vsetting
 from utils.tencent import cos
 
 urlpatterns = [
@@ -39,10 +39,10 @@ urlpatterns = [
         url('(?P<pro_id>\d+)/file/del$', file.file_del, name='file_del'),  # 删除
         url('(?P<pro_id>\d+)/add/file$', file.add_file, name='add_file'),  # 添加文件
         url(r'(?P<pro_id>\d+)/acquire/sts/', file.acquire_sts, name='acquire_sts'),  # 前段获取cos临时凭证
-        url(r'(?P<pro_id>\d+)/upload/sts/', file.upload_sts, name='upload_sts'),  # 前段获取cos临时凭证
-
+        url(r'(?P<pro_id>\d+)/upload/file/', file.upload_file, name='upload_file'),  # 前段获取cos临时凭证
 
         # 配置
-        url('(?P<pro_id>\d+)/setting', manage.setting, name='setting'),
+        url('(?P<pro_id>\d+)/setting$', manage.setting, name='setting'),  # 我的资料
+        url('(?P<pro_id>\d+)/setting/delete$', vsetting.del_setting, name='del_setting'),  # 删除项目
     ], namespace='manage')),
 ]
