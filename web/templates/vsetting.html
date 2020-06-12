@@ -1,0 +1,39 @@
+{% extends 'layout/manage.html' %}
+{% load static %}
+
+{% block css %}
+    <style>
+        .stt {
+            margin: 30px;
+            margin-left: 50px;
+            float: none;
+        }
+        .act{
+            background-color: #8c8c8c;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="stt">
+        <div class="list-group" style="width: 20%; float: left">
+            <a href="#" class="list-group-item active">
+                个人中心
+            </a>
+            <a href="#" class="list-group-item">我的资料</a>
+            <a href="#" class="list-group-item">修改密码</a>
+            <a href="{% url 'web:manage:del_setting' pro_id=request.tracer.project.id %}" class="list-group-item">删除项目</a>
+        </div>
+
+        <div class="panel panel-default" style="width: 70%; float: left; margin-left: 60px">
+            <div class="panel-heading">我的材料</div>
+            <div class="panel-body">
+                嗯哼，来了啊
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block js %}
+{% endblock %}
