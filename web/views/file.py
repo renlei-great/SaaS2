@@ -1,4 +1,5 @@
 import json
+import requests
 
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -203,10 +204,9 @@ def acquire_sts(request, pro_id):
 
 
 # http://192.168.223.134:8000/web/manage/23/upload/sts/
-@csrf_exempt
 def upload_file(request, pro_id):
-    """前端获取临时凭证"""
-    #　获取要下载的文件id
+    """从cos获取前端要下载的文件"""
+    # 获取要下载的文件id
     fid = request.GET.get('fid')
 
     # 查询要下载的文件对象
@@ -216,20 +216,16 @@ def upload_file(request, pro_id):
         project=request.tracer.project
     )
 
-    # 获取临时凭证
-    client = create_cos()
+    # 请求文件
+    response = requests.get(file.file_path)
 
-    # 获取文件到本地
-    response = client.get_object(
-        Bucket='examplebucket-1250000000',
-        Key='picture.jpg',
-    )
-    print(response['Body'])
-    a = response['Body']
+    # 获取文件
+    data = response.content
 
+    # 设置content_type=application/octet-stream 用于提示下载框        @孙歆尧
+    response = HttpResponse(data, content_type="application/octet-stream")
+    from django.utils.encoding import escape_uri_path
 
-
-    return JsonResponse({
-        'key': file.key,
-        'bucket': request.tracer.project.bucket
-    })
+    # 设置响应头：中文件文件名转义      @王洋
+    response['Content-Disposition'] = "attachment; filename={};".format(escape_uri_path(file.file_name))
+    return response

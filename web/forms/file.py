@@ -55,7 +55,7 @@ class FileAddForm(BootsTrap, forms.ModelForm):
 
     def clean_file_path(self):
         file_path = self.cleaned_data['file_path']
-        return f'http"//{file_path}'
+        return f'http://{file_path}'
 
     def clean(self):
         """验证用户是否上传到了cos"""

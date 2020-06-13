@@ -449,55 +449,13 @@
             })
         })
 
-        function a {
-                        console.log(key, bucket)
-            // 获取临时凭证
-            cos = new COS({
-                getAuthorization: function (options, callback) {
-                    // 异步获取临时密钥
-                    $.get(
-                        "{% url 'web:manage:upload_sts' pro_id=request.tracer.project.id %}",
-                        {'fid': fid},   // 可从 options 取需要的参数
-                        function (data) {
-                            callback({
-                                TmpSecretId: data.res.credentials.tmpSecretId,
-                                TmpSecretKey: data.res.credentials.tmpSecretKey,
-                                XCosSecurityToken: data.res.credentials.sessionToken,
-                                // 建议返回服务器时间作为签名的开始时间，避免用户浏览器本地时间偏差过大导致签名错误
-                                StartTime: data.startTime, // 时间戳，单位秒，如：1580000000
-                                ExpiredTime: data.expiredTime, // 时间戳，单位秒，如：1580000900
-                            });
-                            key = data.key
-                            bucket = data.bucket
-                            console.log('竟来了')
-                            console.log(key, bucket)
-                        });
-                }
-            });
-            console.log('出来了')
-            console.log(key, bucket)
-
-            cos.getObjectUrl({
-                {#Bucket: 'user-id-8-pro-name-wjcs-5ad5-1302000219',#}
-                Bucket: bucket,
-                Region: 'ap-nanjing',     /* 存储桶所在地域，必须字段 */
-                {#Key: 'pro_id-23-user-id-8- 32T2.jpg',#}
-                Key: key,
-                Sign: true
-            }, function (err, data) {
-                if (err) return console.log(err);
-                var downloadUrl = data.Url + (data.Url.indexOf('?') > -1 ? '&' : '?') + 'response-content-disposition=attachment'; // 补充强制下载的参数
-                window.open(downloadUrl); // 这里是新窗口打开 url，如果需要在当前窗口打开，可以使用隐藏的 iframe 下载，或使用 a 标签 download 属性协助下载
-            });
-        }
-
         //　下载文件
         $('.uploadtd').on('click', function () {
             // 获取当前文件的id
-            var fid = $(this).attr('data-fid')
+            var fid = $(this).attr('data-fid');
 
             // 进行下载
-            $.get()
+            location.href = "{% url 'web:manage:upload_file' pro_id=request.tracer.project.id %}?fid="+ fid
 
         });
 

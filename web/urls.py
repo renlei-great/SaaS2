@@ -4,7 +4,7 @@ from django.conf.urls import url, include
 from web.views.account import register, send_sms, login_sms, login, exit
 from web.views.home import home_index
 from web.views.project import project, asterisk
-from web.views import manage, wiki, file, vsetting
+from web.views import manage, wiki, file, vsetting, issues
 from utils.tencent import cos
 
 urlpatterns = [
@@ -23,7 +23,6 @@ urlpatterns = [
     # 项目管理
     url(r'^manage/', include([
         url('(?P<pro_id>\d+)/dashboard', manage.dashboard, name='dashboard'),
-        url('(?P<pro_id>\d+)/issues', manage.issues, name='issues'),
         url('(?P<pro_id>\d+)/statistics', manage.statistics, name='statistics'),
 
         # wiki管理
@@ -44,5 +43,8 @@ urlpatterns = [
         # 配置
         url('(?P<pro_id>\d+)/setting$', manage.setting, name='setting'),  # 我的资料
         url('(?P<pro_id>\d+)/setting/delete$', vsetting.del_setting, name='del_setting'),  # 删除项目
+
+        # 问题
+        url('(?P<pro_id>\d+)/issues', issues.issues, name='issues'),
     ], namespace='manage')),
 ]
