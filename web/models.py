@@ -12,6 +12,8 @@ class UserInfo(models.Model):
     mobile_phpne = models.CharField(verbose_name='电话', max_length=32)
     password = models.CharField(verbose_name='密码', max_length=100)
 
+    def __str__(self):
+        return self.username
 
 # 项目模型类 -------
 

@@ -111,7 +111,7 @@
                 <table class="table">
 
                     <tbody class="issues-list">
-                    {% for item in issues_object_list %}
+                    {% for item in contacts.object_list %}
                         <tr>
                             <td class="number">
                                 <i class="fa fa-circle text-{{ item.priority }}"></i>
@@ -158,9 +158,41 @@
             </div>
 
             <nav aria-label="...">
-                <ul class="pagination" style="margin-top: 0;">
-                    {{ page_html|safe }}
-                </ul>
+                {#                <ul class="pagination" style="margin-top: 0;">#}
+                {#                    {{ page_html|safe }}#}
+                {#                </ul>#}
+                <div class="pagination" style="margin-top: 0;">
+                    {% for contact in contacts %}
+                        {# Each "contact" is a Contact model object. #}
+                        {{ contact.full_name|upper }}<br/>
+                        ...
+                    {% endfor %}
+                    <div class="pagination">
+                        {% if contacts.has_previous %}
+                            <li>
+                                <a href="?page={{ contacts.previous_page_number }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% for page in contacts.paginator.page_range %}
+
+                            {% ifequal page  contacts.number%}
+                                <li class="active"><a href="#">{{ page }}</a></li>
+                            {% else %}
+                                 <li ><a href="#">{{ page }}</a></li>
+                            {% endifequal %}
+                        {% endfor %}
+                        {% if contacts.has_next %}
+                            <li>
+                                <a href="?page={{ contacts.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </div>
+                </div>
+
             </nav>
 
         </div>
@@ -334,6 +366,7 @@
                         </div>
 
                     </form>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
@@ -397,8 +430,6 @@
     {#    <script src="{% static 'plugin/select2/js/i18n/zh-CN.js' %}"></script>#}
 
     <script>
-        var WIKI_UPLOAD_URL = "{% url 'web:manage:wiki_upload' pro_id=request.tracer.project.id %}";
-
         $(function () {
             bindBootStrapShownEvent();
             initDatePicker();
@@ -425,30 +456,16 @@
             })
         }
 
-        /*
-        初始化markdown编辑器（textare转换为编辑器）
-         */
-        function initEditorMd() {
-            editormd('editor', {
-                placeholder: "请输入内容",
-                height: 300,
-                path: "{% static 'plugin/editor-md/lib/' %}",
-                imageUpload: true,
-                imageFormats: ["jpg", 'jpeg', 'png', 'gif'],
-                imageUploadURL: WIKI_UPLOAD_URL
-            })
-        }
 
         /*
         发送添加请求
          */
         function AddIssues() {
             $('#btnAddSubmit').on('click', function () {
-                $('.errmsg').empty()
                 var form_data = $('#addForm').serializeArray()
 
                 $.post(
-                    "{% url 'web:manage:issues' pro_id=request.tracer.project.id %}",
+                    "{% url 'user:project:isseus' pro_id=30 %}",
                     form_data,
                     function (res) {
                         if (res.status) {

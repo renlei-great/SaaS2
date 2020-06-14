@@ -1,10 +1,12 @@
+import json
+import os
+from sts.sts import Sts
+
 from django.shortcuts import render
 from django import forms
 from django.core.validators import RegexValidator
 from django.http import JsonResponse
-import json
-import os
-from sts.sts import Sts
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from user_app.project.models import Project
 from saas_29.settings import SecretId, SecretKey
@@ -21,6 +23,24 @@ class CreateProjectForm(forms.Form):
 
 class WikiFileForm(forms.Form):
     text = forms.CharField(widget=forms.Textarea())
+
+
+from django import forms
+
+from web.forms.bootstrap import BootsTrap
+from web.models import Issues
+
+
+class IssuesForm(BootsTrap, forms.ModelForm):
+    """问题管理表单"""
+
+    class Meta:
+        model = Issues
+        exclude = ['project', 'creator', 'create_datetime', 'latest_update_datetime']
+        widgets = {
+            'assign': forms.Select(attrs={'class': "selectpicker", 'data-live-search': "true"}),
+            'attention': forms.SelectMultiple(attrs={'class': "selectpicker", 'multiple data-actions-box': "true"}),
+        }
 
 
 def wiki_st(request):
@@ -124,6 +144,41 @@ def asterisk(request):
 
     pro.save()
     return JsonResponse({'status': True})
+
+
+def issues(request, pro_id):
+    """问题首页"""
+    if request.method == 'GET':
+        """显示"""
+        form = IssuesForm()
+
+        # 查询此项目下的所有问题
+        issues_object_list = Issues.objects.filter(project_id=pro_id)
+
+        # 获取分页数据
+        page = request.GET.get('page', 1)
+
+        # 分页
+        paginator = Paginator(issues_object_list, 1)  # Show 25 contacts per page
+
+        try:
+            contacts = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            contacts = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            contacts = paginator.page(paginator.num_pages)
+
+        # pages = [str(i) for i in range(int(contacts.number))]
+        pages = range(int(contacts.number))
+        contacts.pages = pages
+
+        return render(request, 'project/issues.html', {
+            'form': form,
+            'issues_object_list': issues_object_list,
+            'contacts': contacts,
+        })
 
 
 
