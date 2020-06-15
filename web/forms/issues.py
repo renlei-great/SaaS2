@@ -2,7 +2,7 @@ from django import forms
 
 from web.forms.bootstrap import BootsTrap
 from web.models import Issues, IssuesType, Module, ProjectUser
-
+from web.models import IssuesReply
 
 class IssuesForm(BootsTrap, forms.ModelForm):
     """问题管理表单"""
@@ -44,6 +44,13 @@ class IssuesForm(BootsTrap, forms.ModelForm):
         issues = Issues.objects.filter(project=project).values_list('id', 'subject')
         issues_list.extend(issues)
         self.fields['parent'].choices = issues_list
+
+
+class IssuesReplyForm(BootsTrap, forms.ModelForm):
+    """提交回复或消息变更表单"""
+    class Meta:
+        model = IssuesReply
+        fields = ['reply_type', 'content']
 
 
 

@@ -45,6 +45,8 @@ urlpatterns = [
         url('(?P<pro_id>\d+)/setting/delete$', vsetting.del_setting, name='del_setting'),  # 删除项目
 
         # 问题
-        url('(?P<pro_id>\d+)/issues', issues.issues, name='issues'),
+        url('(?P<pro_id>\d+)/issues$', issues.issues, name='issues'),  # 显示问题
+        url('(?P<pro_id>\d+)/issues/(?P<iss_id>\d+)/detaile/$', issues.issues_detail, name='issues_detail'),  # 显示问题详情
+        url('(?P<pro_id>\d+)/issues/(?P<iss_id>\d+)/detaile/operate$', issues.init_issues_operate, name='issues_operate'),  # 操作记录
     ], namespace='manage')),
 ]

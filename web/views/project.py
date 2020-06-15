@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from pypinyin import pinyin, lazy_pinyin, Style
 from qcloud_cos import CosClientError
 
-from web.models import Project, ProjectUser
+from web.models import Project, ProjectUser, IssuesType
 from web.forms.project import ProjectForm
 from utils.tencent.cos import create_cos
 
@@ -50,7 +50,7 @@ def project(request):
         if not pro_form.is_valid():
             return JsonResponse({'stutic': False, 'error': pro_form.errors})
 
-        # 组织桶名
+        # 组织桶名 - 创建桶
         pro_name_str = pro_form.cleaned_data['project_name']
         pro_name_list = pinyin(pro_name_str, style=Style.FIRST_LETTER)
         pro_name = ",".join(re.findall('\w+', str(pro_name_list))).replace(',', '')
@@ -68,11 +68,12 @@ def project(request):
             pro_form.add_error('project_name', '项目名格式是非法的，只允许数字、字母和- !')
             return JsonResponse({'stutic': False, 'error': pro_form.errors})
 
-        # 数据库中创建项目
+        # 数据库中创建项目　－　创建项目
         pro_form.instance.creator = user
         pro_form.instance.bucket = bucket
-        pro_form.save()
+        project = pro_form.save()
 
+        # 修改桶的ｃｏｒｓ策略
         cors_config = {
             'CORSRule': [
                 {
@@ -89,6 +90,14 @@ def project(request):
             Bucket=pro_form.instance.bucket,
             CORSConfiguration=cors_config,
         )
+
+        # 初始化问题类型　－　问题模块
+        issues_type_list = []
+        for type_name in IssuesType.PROJECT_INIT_LIST:
+            issues_type_list.append(IssuesType(
+                title=type_name,
+                project=project))
+        IssuesType.objects.bulk_create(issues_type_list)
 
         return JsonResponse({'stutic': True})
 

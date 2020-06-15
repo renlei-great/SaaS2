@@ -1,5 +1,7 @@
 {% extends 'layout/manage.html' %}
 {% load static %}
+{% load issues %}
+
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.min.css' %}">
@@ -116,12 +118,12 @@
                             <td class="number">
                                 <i class="fa fa-circle text-{{ item.priority }}"></i>
                                 <a target="_blank"
-                                   href=""></a>
+                                   href="{% url 'web:manage:issues_detail' pro_id=request.tracer.project.id iss_id=item.id %}">{% string_abjuct item.id %}</a>
                             </td>
                             <td class="issue">
                                 <div>
                                     <a target="_blank"
-                                       href="">{{ item.subject }}</a>
+                                       href="{% url 'web:manage:issues_detail' pro_id=request.tracer.project.id iss_id=item.id %}">{{ item.subject }}</a>
                                 </div>
                                 <div class="tags">
                                     <span class="type">
