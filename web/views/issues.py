@@ -73,18 +73,6 @@ def issues_detail(request, pro_id, iss_id):
             }
         )
 
-    # －－－提交回复
-    form = IssuesReplyForm(request.POST)
-
-    if not form.is_valid():
-        return JsonResponse({'status': True, 'errors': form.errors})
-
-    form.instance.issues = iss
-    form.instance.creator = request.tracer.user
-    form.save()
-
-    return JsonResponse({'status': True})
-
 
 @csrf_exempt
 def init_issues_operate(request, pro_id, iss_id):
@@ -111,8 +99,33 @@ def init_issues_operate(request, pro_id, iss_id):
                     'creator': iss_re.creator.username,
                     'create_datetime': iss_re.create_datetime.strftime("%Y-%m-%d %H:%M"),
                     'content': iss_re.content,
+                    'reply': iss_re.reply.id if iss_re.reply else False,
                 }
             )
 
         return JsonResponse({'status': True, 'items': items})
 
+    # －－－提交回复
+    form = IssuesReplyForm(request.POST)
+    reply = request.POST.get('reply')
+
+    if not form.is_valid():
+        return JsonResponse({'status': True, 'errors': form.errors})
+
+    form.instance.issues = iss
+    form.instance.creator = request.tracer.user
+    if reply.isdecimal():
+        form.instance.reply_id = int(reply)
+    iss_re = form.save()
+
+    # 组织返回前端的数据
+    item = {
+        'id': iss_re.id,
+        'reply_type': iss_re.get_reply_type_display(),
+        'creator': iss_re.creator.username,
+        'create_datetime': iss_re.create_datetime.strftime("%Y-%m-%d %H:%M"),
+        'content': iss_re.content,
+        'reply': iss_re.reply.id if iss_re.reply else False,
+    }
+
+    return JsonResponse({'status': True, 'item': item})

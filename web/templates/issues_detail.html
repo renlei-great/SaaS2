@@ -257,8 +257,6 @@
                             <i class="fa fa-times-circle" aria-hidden="true" style="color: #9d9d9d;"></i>
                         </div>
                     </div>
-
-
                 </div>
             </div>
         </div>
@@ -312,8 +310,19 @@
             initeditor()
             SubmitReplyOrAlert()
             initContent()
+            ClickReply()
 
         });
+
+        // 选择回复
+        function ClickReply() {
+            $('.comment-list').on('click', '.reply', function () {
+                var reply = $(this).parents('.clearfix').attr('id')
+                var username = $(this).parents('.clearfix').attr('username')
+                $('#replyUser').removeClass('hide').find('span').html(username).attr('reply', reply)
+
+            })
+        }
 
         // 初始化ｍａｒｋｄｏｗｎ富文本
         function initeditor() {
@@ -343,14 +352,21 @@
             $('#btnSubmit').on('click', function () {
                 content = $('#content').val();
                 reply_type = 2;
+                reply = $('#replyUser').find('span').attr('reply')
                 $.post(
-                    location.href,
+                    INIT_OPERATE_URL,
                     {
                         content: content,
-                        reply_type: reply_type
+                        reply_type: reply_type,
+                        reply:reply,
                     },
                     function (res) {
-                        console.log(res)
+                        if (res.status)
+                        {
+                            $('#content').val("")
+                            $('#replyUser').addClass('hide').attr('reply', "")
+                            AddHtmlRecord(res.item)
+                        }
 
                     })
 
@@ -377,12 +393,12 @@
             $clearfix.find('.type').html(item.reply_type)
             $clearfix.find('.user').html(item.creator)
             $clearfix.find('.date').html(item.create_datetime)
-            $clearfix.attr({id: 'id_'+item.id, username: item.creator})
+            $clearfix.attr({id: item.id, username: item.creator})
 
             if (item.reply)
             {
                 // 挂在到某一个父节点上
-                $('#id_'+item.reply).find('.child').append($clearfix)
+                $('#'+item.reply).find('.child').append($clearfix)
             }
             else{
                 // 作为根直接显示
