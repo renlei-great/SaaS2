@@ -106,6 +106,7 @@ def init_issues_operate(request, pro_id, iss_id):
         for iss_re in iss_re_all:
             items.append(
                 {
+                    'id': iss_re.id,
                     'reply_type': iss_re.get_reply_type_display(),
                     'creator': iss_re.creator.username,
                     'create_datetime': iss_re.create_datetime.strftime("%Y-%m-%d %H:%M"),
