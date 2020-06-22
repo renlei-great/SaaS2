@@ -4,7 +4,7 @@ from django.conf.urls import url, include
 from web.views.account import register, send_sms, login_sms, login, exit
 from web.views.home import home_index
 from web.views.project import project, asterisk
-from web.views import manage, wiki, file, vsetting, issues
+from web.views import manage, wiki, file, vsetting, issues, dashboard
 from utils.tencent import cos
 
 urlpatterns = [
@@ -22,7 +22,6 @@ urlpatterns = [
 
     # 项目管理
     url(r'^manage/', include([
-        url(r'(?P<pro_id>\d+)/dashboard', manage.dashboard, name='dashboard'),
         url(r'(?P<pro_id>\d+)/statistics', manage.statistics, name='statistics'),
 
         # wiki管理
@@ -50,5 +49,8 @@ urlpatterns = [
         url(r'^(?P<pro_id>\d+)/add/user$', issues.add_user_pro, name='add_user_pro'),  # 给某个项目添加成员
         url(r'(?P<pro_id>\d+)/issues/(?P<iss_id>\d+)/detaile/$', issues.issues_detail, name='issues_detail'),  # 显示问题详情
         url(r'(?P<pro_id>\d+)/issues/(?P<iss_id>\d+)/detaile/operate$', issues.init_issues_operate, name='issues_operate'),  # 操作记录
+
+        # 概览
+        url(r'(?P<pro_id>\d+)/dashboard$', dashboard.dashboard, name='dashboard'),  # 概览显示
     ], namespace='manage')),
 ]

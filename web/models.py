@@ -30,7 +30,7 @@ class PricePolicy(models.Model):
 
     pro_num = models.PositiveIntegerField(verbose_name='创建项目个数')
     pro_member = models.PositiveIntegerField(verbose_name='项目成员')
-    pro_space = models.PositiveIntegerField(verbose_name='项目空间', help_text='M')
+    pro_space = models.PositiveIntegerField(verbose_name='项目空间', help_text='G')
     per_file_size = models.PositiveIntegerField(verbose_name='单文件大小', help_text='M')
     create_time = models.DateField(verbose_name='创建时间', auto_now_add=True)
 
@@ -80,7 +80,7 @@ class Project(models.Model):
     is_star = models.BooleanField(verbose_name='是否星标', default=False)
     join_count = models.IntegerField(default=1, verbose_name='参与人数')
     creator = models.ForeignKey(verbose_name='创建者', to='UserInfo')
-    used_space = models.IntegerField(verbose_name='已使用空间', default=0)
+    used_space = models.IntegerField(verbose_name='已使用空间', default=0, help_text='KB')
     create_time = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
 
     # cos对象所需要的字段

@@ -11,4 +11,6 @@ urlpatterns = (
     url(r'^wiki/sts', views.wiki_st, name='wiki_sts'),
     url(r'^isseus/(?P<pro_id>\w+)$', views.issues, name='isseus'),
 
+    url(r'^test/$', views.test, name='test'),
+
 )

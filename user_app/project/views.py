@@ -181,4 +181,10 @@ def issues(request, pro_id):
         })
 
 
+def test(request):
+    """仔细问卷"""
+
+    return render(request, 'file/test.html')
+
+
 
