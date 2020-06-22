@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{% static 'plugin/editor-md/css/editormd.min.css' %}">
     <link rel="stylesheet" href="{% static 'plugin/bootstrap-datepicker/css/bootstrap-datepicker.min.css' %}">
     <link rel="stylesheet" href="{% static 'plugin/bootstrap-select/css/bootstrap-select.min.css' %}">
-    {#    <link rel="stylesheet" href="{% static 'plugin/select2/css/select2.min.css' %}">#}
+        <link rel="stylesheet" href="{% static 'plugin/select2/css/select2.min.css' %}">
     <style>
         .issues-list .number {
             width: 100px;
@@ -79,7 +79,7 @@
     <div class="container-fluid clearfix" style="padding: 20px 0;">
 
         <!--　　**　筛选　**　-->
-        <div class="col-sm-3">
+        <div class="col-sm-3 ">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <i class="fa fa-search" aria-hidden="true"></i> 筛选
@@ -96,6 +96,20 @@
                         </div>
                     {% endfor %}
 
+                </div>
+            </div>
+        </div>
+
+        <!--　　**　筛选　**　-->
+        <div class="col-sm-3 hide">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <i class="fa fa-search" aria-hidden="true"></i> 筛选
+                </div>
+                <div class="panel-body filter-area">
+                    {% for item in status %}
+                        {{ item }}
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -365,6 +379,12 @@
                                 <span class="errmsg"></span>
                             </div>
                         {% endfor %}
+
+                        <span>
+                            注：当前套餐最大人数：{{ request.tracer.price_policy.pro_member }} 人
+                            ，当前项目已有人数：{{ request.tracer.project.join_count }} 人
+                        </span>
+                        <br>
                         <button type="button" class="btn btn-success" id="btnGenInviteCode">生成邀请码</button>
                     </form>
                     <div id="inviteArea" class="hide">
@@ -395,18 +415,83 @@
     <script src="{% static 'plugin/bootstrap-datepicker/locales/bootstrap-datepicker.zh-CN.min.js' %}"></script>
     <script src="{% static 'plugin/bootstrap-select/js/bootstrap-select.min.js' %}"></script>
     <script src="{% static 'plugin/bootstrap-select/js/i18n/defaults-zh_CN.min.js' %}"></script>
-    {#    <script src="{% static 'plugin/select2/js/select2.min.js' %}"></script>#}
+    <script src="{% static 'plugin/select2/js/select2.min.js' %}"></script>
     {#    <script src="{% static 'plugin/select2/js/i18n/zh-CN.js' %}"></script>#}
 
     <script>
         var WIKI_UPLOAD_URL = "{% url 'web:manage:wiki_upload' pro_id=request.tracer.project.id %}";
+        var INVITE_COD_URL = "{% url 'web:manage:invite_code' pro_id=request.tracer.project.id %}"
 
         $(function () {
             bindBootStrapShownEvent();
             initDatePicker();
             AddIssues()
+            initSelect();
+            SendSelect()
+            bindClickCheckFilter();
+            btnGenInviteCode();
+            bindCopyUrl();
         });
 
+        /*
+        点击拷贝邀请码
+        */
+        function bindCopyUrl() {
+            $('#btnCopyUrl').click(function () {
+                var textInput = $('#inviteUrl')[0]; // document.getElementById('inviteUrl')
+                textInput.select();
+
+                document.execCommand("Copy");
+                alert('复制成功');
+            })
+        }
+
+        // 点击生成邀请嘛
+        function btnGenInviteCode() {
+            $('#btnGenInviteCode').on('click', function () {
+                // 发送一个请求，请求成功返回一个邀请码显示到页面
+                data = $('#inviteForm').serializeArray()
+                $.post(INVITE_COD_URL, data, function (res) {
+                    if (res.status){
+                        $('#inviteArea').removeClass('hide').find('#inviteUrl').val(res.url);
+                    }
+                    else{
+                        $.each(res.error, function (key, val) {
+                                $('#id_' + key).next('.errmsg').text(val[0])
+                            }
+                        )
+                    }
+
+                })
+
+            })
+
+        }
+
+        /*
+        点击筛选的checkbox
+        */
+        function bindClickCheckFilter() {
+            $('.filter-area').find(':checkbox').click(function () {
+                location.href = $(this).parent().attr('href');
+            });
+        }
+
+        // 发送select筛选条件
+        function SendSelect() {
+             $('.select2').select2({}).on('select2:select', function (e) {
+                // 选中某一项触发
+                location.href = e.params.data.id;
+            }).on('select2:unselect', function (e) {
+                // 移除某一项触发
+                location.href = e.params.data.id;
+            });
+        }
+
+        // 初始化select框
+        function initSelect() {
+            $('.select2').select2();
+        }
 
         /*
         添加对话框：初始化时间选择

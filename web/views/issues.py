@@ -1,13 +1,155 @@
 import time, json
+import uuid
+import bcrypt
 
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.safestring import mark_safe
+from django_redis import get_redis_connection
 
-from web.forms.issues import IssuesForm, IssuesReplyForm
-from web.models import Issues, Project, IssuesReply, ProjectUser
+from web.forms.issues import IssuesForm, IssuesReplyForm, IssuesProjectInvite
+from web.models import Issues, Project, IssuesReply, ProjectUser, Transaction
 from utils.web.pagination import Pagination
+
+
+def org_pro_user(request):
+    """功能:
+        组织本项目下的所有用户
+        """
+    # 组织此项目下的所有用户
+    pro_users = ProjectUser.objects.filter(project_id=request.tracer.project.id)
+    pro_user_list = [request.tracer.project.creator, ]
+    for pro_user in pro_users:
+        pro_user_list.append(pro_user.user)
+
+    return pro_user_list
+
+class SreachIssuesIter:
+    """动态生成model中的字段choices中的选项变成前段的复选框"""
+    def __init__(self, name, request):
+        self.name = name
+        self.request = request
+
+    def __iter__(self):
+        # 使用yield直接写一个迭代器
+        # 获取字段对象
+        filed = Issues._meta.get_field(self.name)
+
+        # 获取字段对象的choices
+        if filed.rel:
+            filed_choices_list = []
+            filed_fk_dict = filed.rel.model.objects.filter(project=self.request.tracer.project).values('id', 'title')
+            for dic in filed_fk_dict:
+                filed_choices_list.append((dic['id'], dic['title']))
+        else:
+            filed_choices_list = filed.choices
+
+
+        # '<a class="cell" href="{url}"><input type="checkbox" {ck} /><label>{text}</label></a>'
+        tpl = '<a class="cell" href="{url}"><input type="checkbox" {ck}/><label>{text}</label></a>'
+
+        # 获取URL中的信息
+        url_info = self.request.path_info
+        url_dict = self.request.GET.copy()
+        url_dict._mutabla = True  # 设置此值，url_dict才能被修改
+
+        for index, value in filed_choices_list:
+            '''
+            设置URL的整体思想就是：
+                先将URL中是此name的所有的参数都取出来，使用getlist获取到一个列表
+                如果此刻循环的这个index和这个getlist
+            '''
+            # 获取URL参数列表
+            get_list = self.request.GET.getlist(self.name)
+
+            # 判断当前的id是否被选择
+            if str(index) in get_list:
+                # 被选择
+                ck = 'checked'
+                get_list.remove(str(index))
+            else:
+                # 没有选择进行添加
+                ck = ""
+                get_list.append(str(index))
+
+            # 组织URL
+            url_dict.setlist(self.name, get_list)
+            if 'page' in url_dict:
+                url_dict.pop('page')
+
+            # 将字段变为URL get请求参数
+            param_url = url_dict.urlencode()
+
+            if param_url:
+                url = f'{url_info}?{param_url}'
+            else:
+                url = url_info
+
+            yield mark_safe(tpl.format(url=url, ck=ck, text=value))
+
+
+class SreachAssignIter:
+    """动态生成model中的字段指派中的选项变成前段的复选框"""
+    def __init__(self, name, request):
+        self.name = name
+        self.request = request
+
+    def __iter__(self):
+        # 使用yield直接写一个迭代器
+        # 获取字段对象
+        filed = Issues._meta.get_field(self.name)
+
+        # 获取字段对象,组织数据
+        filed_choices_list = []
+        pro_user_list = org_pro_user(self.request)
+        yield mark_safe("<select class='select2' multiple='multiple' style='width:100%;' >")
+
+        # 遍历每一个对象，得到一个[(1,'name'),(2, 'name),(3, 'name')]
+        for user in pro_user_list:
+            filed_choices_list.append((user.id, user.username))
+
+        tpl = "<option value='{url}' {ck} >{text}</option>"
+
+        # 获取URL中的信息
+        url_info = self.request.path_info
+        url_dict = self.request.GET.copy()
+        url_dict._mutabla = True  # 设置此值，url_dict才能被修改
+
+        for index, value in filed_choices_list:
+            '''
+            设置URL的整体思想就是：
+                先将URL中是此name的所有的参数都取出来，使用getlist获取到一个列表
+                如果此刻循环的这个index和这个getlist
+            '''
+            # 获取URL参数列表
+            get_list = self.request.GET.getlist(self.name)
+
+            # 判断当前的id是否被选择
+            if str(index) in get_list:
+                # 被选择
+                ck = 'selected'
+                get_list.remove(str(index))
+            else:
+                # 没有选择进行添加
+                ck = ""
+                get_list.append(str(index))
+
+            # 组织URL
+            url_dict.setlist(self.name, get_list)
+            if 'page' in url_dict:
+                url_dict.pop('page')
+
+            # 将字段变为URL get请求参数
+            param_url = url_dict.urlencode()
+
+            if param_url:
+                url = f'{url_info}?{param_url}'
+            else:
+                url = url_info
+
+            yield mark_safe(tpl.format(url=url, ck=ck, text=value))
+        yield mark_safe("</select>")
 
 
 def issues(request, pro_id):
@@ -15,9 +157,20 @@ def issues(request, pro_id):
     if request.method == 'GET':
         """显示"""
         form = IssuesForm(request)
+        # 做问题筛选，进行拼接
+        allow_filter_name = ['issues_type', 'status', 'priority', 'assign', 'attention']
+        get_filter = {}
+        for name in allow_filter_name:
+            value = request.GET.getlist(name)
+            if not value:
+                continue
+            if name == 'issues_type':
+                get_filter[f'{name}_id__in'] = value
+            else:
+                get_filter[f'{name}__in'] = value
 
         # 查询此项目下的所有问题
-        issues_list = Issues.objects.filter(project_id=pro_id)
+        issues_list = Issues.objects.filter(project_id=pro_id).filter(**get_filter)
 
         # 分页
         page_object = Pagination(
@@ -30,10 +183,27 @@ def issues(request, pro_id):
         )
         issues_object_list = issues_list[page_object.start:page_object.end]
 
+        # 获取状态的筛选迭代器
+        filter_list = []
+        for title_name in ['issues_type', 'status', 'priority', 'assign', 'attention']:
+            title = Issues._meta.get_field(title_name).verbose_name
+            if title_name in ['assign', 'attention']:
+                # 获取的是select框
+                filter = SreachAssignIter(name=title_name, request=request)
+            else:
+                # 获取的是多选框
+                filter = SreachIssuesIter(name=title_name, request=request)
+            filter_list.append({'title': title, 'filter': filter})
+
+        # 邀请成员表单
+        invite_form = IssuesProjectInvite(request)
+
         return render(request, 'issues.html', {
             'form': form,
             'issues_object_list': issues_object_list,
-            'page_html': page_object.page_html()
+            'page_html': page_object.page_html(),
+            'filter_list': filter_list,
+            'invite_form': invite_form
         })
 
     """添加"""
@@ -52,18 +222,6 @@ def issues(request, pro_id):
 @csrf_exempt
 def issues_detail(request, pro_id, iss_id):
     """问题详情编辑页"""
-
-    def org_pro_user():
-        """功能:
-            组织本项目下的所有用户
-            """
-        # 组织此项目下的所有用户
-        pro_users = ProjectUser.objects.filter(project_id=pro_id)
-        pro_user_list = [request.tracer.project.creator, ]
-        for pro_user in pro_users:
-            pro_user_list.append(pro_user.user)
-
-        return pro_user_list
 
     # 查询出此问题
     try:
@@ -130,7 +288,7 @@ def issues_detail(request, pro_id, iss_id):
         else:  # 值不为空
             # 修改的是指派给谁
             if name == 'assign':
-                pro_user_list = org_pro_user()
+                pro_user_list = org_pro_user(request)
                 jubge = True
                 for user in pro_user_list:
                     if str(user.id) == value:
@@ -180,16 +338,21 @@ def issues_detail(request, pro_id, iss_id):
             content = template_text.format(name=obj_filed.verbose_name, value='空')
         else:
             # 值不为空
-            pro_user_list = org_pro_user()
+            pro_user_list = org_pro_user(request)
+            user_dict = {}
             for user in pro_user_list:
-                if str(user.id) in value:
-                    pass
+                # 添加所有的用到变成一个字段 格式 ID : name
+                user_dict[str(user.id)] = user.username
 
-
-
-
-
-
+            # 遍历前端传来的每一个id进行判断是否超出范围
+            usernames = ''
+            for id in value:
+                if id in user_dict:
+                    # 在范围内
+                    usernames += user_dict[id] + ', '
+                else:
+                    return JsonResponse({'status': False, 'error': '数据出错，请重新执行操作'})
+            content = template_text.format(name=obj_filed.verbose_name, value=usernames)
 
     # 验证通过-修改数据库数据
     try:
@@ -278,3 +441,110 @@ def init_issues_operate(request, pro_id, iss_id):
     }
 
     return JsonResponse({'status': True, 'item': item})
+
+
+def invite_code(request, pro_id):
+    """生成邀请码"""
+    invite_form = IssuesProjectInvite(request, data=request.POST)
+
+    if not invite_form.is_valid():
+        return JsonResponse({'status': False, 'error': invite_form.errors})
+
+    # 校验用户
+    if request.tracer.project.creator.id != request.tracer.user.id:
+        invite_form.add_error('count', '权限错误')
+        return JsonResponse({'status': False, 'error': invite_form.errors})
+
+    # 获取数据
+    period = invite_form.cleaned_data['period']
+    count = invite_form.cleaned_data['count']
+
+    # 组织返回的邀请码url地址
+    try:
+        period = int(period) * 60
+        # period = 3
+    except Exception:
+        invite_form.add_error('period', '输入有误')
+        return JsonResponse({'status': False, 'error': invite_form.errors})
+
+    # 生成加密邀请码
+    str_redis = str(uuid.uuid4())[0:5].encode()
+    code = bcrypt.hashpw(str_redis, bcrypt.gensalt()).decode()
+    # 组织URL
+    # http://192.168.223.135:8000/web/manage/31/issues
+    # request.scheme 获取请求协议
+    # request.get_host 获取请求主机名
+    # path 携带的参数
+    path = reverse('web:manage:add_user_pro', kwargs={'pro_id': pro_id})
+    ret_url = f'{request.scheme}://{request.get_host()}{path}?code={code}'
+
+    # 向redis添加数据
+    con = get_redis_connection()
+    con.hmset(f'pro_{pro_id}', {
+        'pro_id': pro_id,
+        'count': count,
+        'use_count': 0,
+        'code': str_redis,
+    })
+
+    con.expire(f'pro_{pro_id}', period)
+
+    return JsonResponse({'status': True, 'url': ret_url})
+
+
+def add_user_pro(request, pro_id):
+    """为项目添加成员"""
+    # 获取redis中的code
+    code = request.GET.get('code', '')
+    if not code:
+        return render(request, 'invite_join.html', {'status': False, 'error': '链接无效'})
+
+    # 链接redis
+    con = get_redis_connection()
+    # 组织redis数据库中的键
+    key = f'pro_{pro_id}'
+    is_judbge = con.hexists(key, 'code')
+
+    # 查询redis中存放的code，验证邀请链接是否有效
+    if is_judbge:
+        redis_code = con.hmget(key, 'code')
+    else:
+        return render(request, 'invite_join.html', {'status': False, 'error': '链接已超时或不存在'})
+    if not bcrypt.checkpw(redis_code[0], code.encode()):
+        return render(request, 'invite_join.html', {'status': False, 'error': '链接无效'})
+
+    # 该用户是否已经加入此项目
+    pro = Project.objects.filter(creator=request.tracer.user, id=pro_id).exists()
+    pro_user = ProjectUser.objects.filter(project_id=pro_id, user=request.tracer.user).exists()
+    if pro or pro_user:
+        return render(request, 'invite_join.html', {'status': False, 'error': '您已经在此项目当中'})
+
+    # 该链接邀请人数是否达到最大人数
+    count = int(con.hmget(key, 'count')[0].decode())
+    use_count = int(con.hmget(key, 'use_count')[0].decode())
+    if use_count +1 > count:
+        return render(request, 'invite_join.html', {'status': False, 'error': '此链接已达到邀请人数限制'})
+
+    project = Project.objects.get(id=int(pro_id))
+
+    # 查看此套餐的最大人数限制是否足够
+    # 获取用户的权限
+    obj_trans = Transaction.objects.filter(user=project.creator, status=2).order_by('-id').first()
+    if project.join_count + 1 > int(obj_trans.price_policy.pro_member):
+        return JsonResponse({'status': False, 'error': '此项目已达到邀请人数限制，请升级套餐'})
+
+    # 验证通过，执行相应的增加
+    # use_count += 1
+    # con.hmset(key, {'use_count': use_count})
+    con.hincrby(key, 'use_count', amount=1)
+    join_count = project.join_count
+    project.join_count += 1
+    project.save()
+
+    # 向数据库添加项目
+    ProjectUser(
+        project_id=pro_id,
+        user=request.tracer.user,
+    ).save()
+    return render(request, 'invite_join.html', {'status': True, 'pro_id': pro_id})
+

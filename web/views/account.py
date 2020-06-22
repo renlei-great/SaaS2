@@ -33,7 +33,11 @@ def login(request):
 
         request.session['user_id'] = user_object.id
         request.session.set_expiry(60 * 60 * 24 * 14)
+        url_path = request.GET.get('url_path')
 
+        # 检测URL来前访问的地址
+        if url_path:
+            return JsonResponse({'status': True, 'data': url_path})
         return JsonResponse({'status': True, 'data': '/web/index'})
 
 

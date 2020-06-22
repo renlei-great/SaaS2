@@ -80,7 +80,7 @@
         event.preventDefault();
         var data = $('form').serializeArray();
         console.log(data)
-        $.post('{% url 'web:login' %}', data, function (data) {
+        $.post(location.href, data, function (data) {
             // 返回结果
             if (data.status) {
                 location.href = data.data

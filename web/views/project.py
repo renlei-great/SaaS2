@@ -32,7 +32,7 @@ def project(request):
             star.cls = 'my'  # 动态添加属性,表示是什么类型的星标
 
         for star in pro_user_stars:
-            star.cls = 'join'
+            star.project.cls = 'join'
             pro_stars.append(star.project)
 
         countxt = {'pro_list': pro_list,

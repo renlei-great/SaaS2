@@ -1,6 +1,7 @@
 from django.test import TestCase
-import uuid
+# import uuid
+#
+# print(str(uuid.uuid4())[1:5]
 
-print(str(uuid.uuid4())[1:5])
 
 # Create your tests here.

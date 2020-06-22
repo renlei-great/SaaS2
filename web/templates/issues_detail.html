@@ -67,6 +67,9 @@
                     <div>
                         <i class="fa fa-edit" aria-hidden="true"></i> 更新问题
                     </div>
+                    <div>
+                        <div></div>
+                    </div>
 
                 </div>
                 <div class="panel-body">
@@ -331,7 +334,8 @@
 
         // 当form表单中有改变的时候
         function ChangeForm() {
-            $('#editForm').on('change', 'input,select', function () {
+            // 'input,select'
+            $('#editForm').on('change', '.form-control', function () {
 
                 $(this).parents('label').html()
                 var va = $(this).val()
@@ -358,7 +362,7 @@
 
         // 提交ｍａｒｋｄｏｗｎ的值
         function saveDesc() {
-            console.log('desc', EDITOR.getValue())
+            PostAjaxSend({name:'desc', value:EDITOR.getValue()})
         }
 
         // 选择回复
@@ -441,11 +445,12 @@
             $clearfix.find('.user').html(item.creator)
             $clearfix.find('.date').html(item.create_datetime)
             $clearfix.attr({id: item.id, username: item.creator})
+            $clearfix.find('.child').attr({id: 'per_'+item.id})
 
             if (item.reply)
             {
                 // 挂在到某一个父节点上
-                $('#'+item.reply).find('.child').append($clearfix)
+                $('#per_'+item.reply).append($clearfix)
             }
             else{
                 // 作为根直接显示
