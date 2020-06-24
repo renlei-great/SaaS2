@@ -1,7 +1,7 @@
 {% extends 'layout/manage.html' %}
 {% load static %}
 {% load dashboard %}
-{#{% load issues %}#}
+{% load issues %}
 {% block css %}
     <style>
         .table-right > tbody > tr > td.label-left {
@@ -159,7 +159,7 @@
                             <tr>
                                 <td class="label-left">项目空间: </td>
                                 <td> {% user_span request.tracer.project.used_space %}
-                                    / {{ request.tracer.price_policy.project_space }} GB
+                                    / {{ request.tracer.price_policy.pro_space }} GB
                                 </td>
                             </tr>
                             </tbody>
@@ -184,8 +184,8 @@
                                     <td>
                                         <div>{{ item.creator.username }}</div>
                                         <div>指派
-{#                                            {% string_just item.id %}#}
-                                            <a href="{% url 'issues_detail' project_id=request.tracer.project.id issues_id=item.id %}"></a>
+
+                                            <a href="{% url 'web:manage:issues_detail' pro_id=request.tracer.project.id iss_id=item.id %}">{% string_abjuct item.id %}</a>
                                             给 {{ item.assign.username }}
                                         </div>
                                     </td>
@@ -207,9 +207,9 @@
 
 
 {% block js %}
-{#    <script src="{% static 'plugin/highcharts/highcharts.js' %}"></script>#}
+    <script src="{% static 'plugin/highcharts/highcharts.js' %}"></script>
     <script>
-        {#var INIT_CHART = "{% url 'issues_chart' project_id=request.tracer.project.id %}";#}
+        var INIT_CHART = "{% url 'web:manage:issues_chart' pro_id=request.tracer.project.id %}";
         Highcharts.setOptions({
             global: {
                 useUTC: false

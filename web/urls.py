@@ -52,5 +52,7 @@ urlpatterns = [
 
         # 概览
         url(r'(?P<pro_id>\d+)/dashboard$', dashboard.dashboard, name='dashboard'),  # 概览显示
+        # issues_chart
+        url(r'(?P<pro_id>\d+)/issues/chart$', dashboard.issues_chart, name='issues_chart'),  # 概览显示
     ], namespace='manage')),
 ]

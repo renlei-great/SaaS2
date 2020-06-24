@@ -6,7 +6,6 @@ register = Library()
 @register.simple_tag()
 def user_span(span):
     """转化用户空间单位"""
-    print(span)
     span = int(span)
     if span < (1024 * 1024 *1024) and span > (1024 * 1024):
         return '%.2f GB' % (int(span) / (1024 * 1024 *1024))
