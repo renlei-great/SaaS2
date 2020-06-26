@@ -186,7 +186,10 @@
                                         <div>指派
 
                                             <a href="{% url 'web:manage:issues_detail' pro_id=request.tracer.project.id iss_id=item.id %}">{% string_abjuct item.id %}</a>
-                                            给 {{ item.assign.username }}
+                                            给 {% if item.assign.username %}{{ item.assign.username }}
+                                            {% else %}
+                                            无
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td style="width: 156px;">
