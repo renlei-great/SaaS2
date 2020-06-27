@@ -5,6 +5,7 @@ from web.views.account import register, send_sms, login_sms, login, exit
 from web.views.home import home_index
 from web.views.project import project, asterisk
 from web.views import manage, wiki, file, vsetting, issues, dashboard, statistics
+from web.views import price
 from utils.tencent import cos
 
 urlpatterns = [
@@ -19,6 +20,15 @@ urlpatterns = [
     # 项目展示
     url(r'^project', project, name='project'),
     url(r'^asterisk/(?P<pro_type>\w+)/', asterisk, name='aster'),
+
+    # 价格
+    url(r'^price/', price.price_show, name='price_show'),  # 价格显示
+
+    # 需要用户登录
+    url(r'^user/', include([
+        # 价格
+        url(r'^price/payment/(?P<policy_id>\w+)/', price.payment, name='payment'),  # 价格显示
+    ], namespace='user')),
 
     # 项目管理
     url(r'^manage/', include([

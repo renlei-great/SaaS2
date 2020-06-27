@@ -164,6 +164,7 @@ BLACK_REGEX_URL_LEST = [
     '/web/project',
     '/web/manage',  # 项目管理
     '/user/project',  # 练习
+    'web/user',  # 需要用户登录
 ]
 
 
