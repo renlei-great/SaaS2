@@ -75,3 +75,8 @@ def payment(request, policy_id):
     }
 
     return render(request, 'payment.html', context)
+
+
+def pay(request):
+    """支付"""
+    return HttpResponse('kk')

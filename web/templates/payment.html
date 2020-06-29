@@ -38,7 +38,7 @@
             </div>
         {% endif %}
 {#    {% url 'pay' %}#}
-        <a class="btn btn-primary" href="">立即支付</a>
+        <a class="btn btn-primary" href="{% url 'web:user:pay'  %}">立即支付</a>
     </div>
 
 {% endblock %}

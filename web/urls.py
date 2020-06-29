@@ -28,6 +28,8 @@ urlpatterns = [
     url(r'^user/', include([
         # 价格
         url(r'^price/payment/(?P<policy_id>\w+)/', price.payment, name='payment'),  # 价格显示
+        url(r'^price/pay/', price.pay, name='pay'),  # 支付
+
     ], namespace='user')),
 
     # 项目管理
